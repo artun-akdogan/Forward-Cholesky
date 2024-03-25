@@ -8,8 +8,8 @@
 #include <cmath>
 #include <algorithm>
 #include <stack>
-
 #include <chrono>
+//#include <omp.h>
 
 typedef unsigned int uint;
 typedef unsigned long long ullong;
@@ -48,7 +48,7 @@ int log2_32(uint32_t value)
 }
 
 // Function to perform DFS and topological sorting
-void topologicalSortUtil(int v, int d, const std::vector<uint> &adj,
+void topologicalSortUtil(int v, int d, const std::vector<std::vector<uint>> &adj,
                          std::vector<bool> &visited,
                          std::vector<std::vector<uint>> &Stack)
 {
@@ -56,9 +56,11 @@ void topologicalSortUtil(int v, int d, const std::vector<uint> &adj,
     visited[v] = true;
 
     // Recur for all adjacent vertices
-
-    if (!visited[adj[v]])
-        topologicalSortUtil(adj[v], d + 1, adj, visited, Stack);
+    for (auto x : adj[v])
+    {
+        if (!visited[x])
+            topologicalSortUtil(x, d + 1, adj, visited, Stack);
+    }
 
     // Push current vertex to stack which stores the result
     while (Stack.size() <= d)
@@ -69,18 +71,94 @@ void topologicalSortUtil(int v, int d, const std::vector<uint> &adj,
 }
 
 // Function to perform Topological Sort
-void topologicalSort(const std::vector<uint> &tree, std::vector<std::vector<uint>> &topological)
+void topologicalSort(const std::vector<std::vector<uint>> &tree, std::vector<std::vector<uint>> &topological)
 {
     std::vector<bool> visited(tree.size(), false);
 
     // Call the recursive helper function to store
     // Topological Sort starting from all vertices one by
     // one
-    for (int i = tree.size() - 1; i >=0; i--)
+    for (int i = tree.size() - 1; i >= 0; i--)
     {
         if (!visited[i])
             topologicalSortUtil(i, 0, tree, visited, topological);
     }
+    /*
+        for (int i = 0; i < topological.size(); i++){
+            std::sort(topological[i].begin(), topological[i].end());
+        }*/
+}
+
+uint calc_row(uint row, const std::vector<std::vector<sparse>> &matrix, const std::vector<std::vector<uint>> &rev_graph, std::vector<std::vector<sparse>> &result)
+{ /*
+     int temp;
+     if (row == 110)
+     { // Segmentation
+         std::cin >> temp;
+     }*/
+    uint tot_lines = 0;
+    result[row].reserve(rev_graph[row].size() + 20);
+    for (auto fit = rev_graph[row].begin(); fit != rev_graph[row].end(); fit++)
+    {
+        double tot = 0, mat_val = 0, res_val = 0;
+        for (uint a = 0, b = 0; a < result[row].size() && b < result[*fit].size() && result[row][a].column < *fit && result[*fit][b].column < *fit;)
+        {
+            if (result[row][a].column < result[*fit][b].column)
+            {
+                a++;
+            }
+            else if (result[row][a].column > result[*fit][b].column)
+            {
+                b++;
+            }
+            else
+            {
+                tot += result[row][a].data * result[*fit][b].data;
+                a++;
+                b++;
+            }
+        }
+
+        auto mat_it = std::lower_bound(matrix[row].begin(), matrix[row].end(), (uint)*fit,
+                                       [](const sparse &lhs, const uint rhs)
+                                       { return lhs.column < rhs; });
+        if (mat_it->column == *fit)
+        {
+            mat_val = mat_it->data;
+        }
+        auto res_it = std::lower_bound(result[*fit].begin(), result[*fit].end(), (uint)*fit,
+                                       [](const sparse &lhs, const uint rhs)
+                                       { return lhs.column < rhs; });
+        if (res_it != result[*fit].end() && res_it->column == *fit)
+        {
+            res_val = res_it->data;
+        }
+        if ((mat_val - tot) / res_val != 0)
+        {
+            result[row].push_back({(mat_val - tot) / res_val, row, *fit});
+            tot_lines++;
+        }
+    }
+
+    double tot = 0, mat_val = 0;
+    for (uint a = 0; a < result[row].size(); a++)
+    {
+        tot += result[row][a].data * result[row][a].data;
+    }
+    auto mat_it = std::lower_bound(matrix[row].begin(), matrix[row].end(), row,
+                                   [](const sparse &lhs, const uint rhs)
+                                   { return lhs.column < rhs; });
+
+    if (mat_it->column == row)
+    {
+        mat_val = mat_it->data;
+    }
+    if (mat_val - tot != 0)
+    {
+        result[row].push_back({std::sqrt(mat_val - tot), row, row});
+        tot_lines++;
+    }
+    return tot_lines;
 }
 
 int main()
@@ -89,7 +167,7 @@ int main()
     auto beg = std::chrono::high_resolution_clock::now();
 
     std::ifstream file("ct20stif.mtx");
-    int num_row, num_col, num_lines, tot_lines = 0;
+    int num_row, num_col, num_lines;
 
     // Ignore comments headers
     while (file.peek() == '%')
@@ -101,7 +179,7 @@ int main()
     std::vector<std::vector<sparse>> matrix(num_row);
     std::vector<std::vector<sparse>> result(num_row);
     std::vector<std::set<uint>> graph(num_row);
-    std::vector<uint> tree(num_row);
+    std::vector<std::vector<uint>> tree(num_row);
     std::vector<std::vector<uint>> topological;
     std::vector<std::vector<uint>> rev_graph(num_row);
 
@@ -180,7 +258,7 @@ int main()
 
     for (uint i = 0; i < num_row; i++)
     {
-        tree[*(graph[i].begin())] = i;
+        tree[*(graph[i].begin())].push_back(i);
     }
     topologicalSort(tree, topological);
     tree.clear();
@@ -216,78 +294,29 @@ int main()
     graph.clear();
     graph.shrink_to_fit();
 
-    for (uint i = 0; i < num_row; i++)
+    uint tot_lines = 0;
+
+    for (uint d = topological.size() - 1; d != UINT32_MAX; d--)
     {
-        result[i].reserve(rev_graph[i].size() + 20);
-        for (auto fit = rev_graph[i].begin(); fit != rev_graph[i].end(); fit++)
+        if(d%1000==0)
+        std::cout << d << " " << topological[d].size() << std::endl;
+        /*
+        for (long i = 0; i < topological[d].size(); i++)
         {
-            double tot = 0, mat_val = 0, res_val = 0;
-            for (uint a = 0, b = 0; a < result[i].size() && b < result[*fit].size() && result[i][a].column < *fit && result[*fit][b].column < *fit;)
-            {
-                if (result[i][a].column < result[*fit][b].column)
-                {
-                    a++;
-                }
-                else if (result[i][a].column > result[*fit][b].column)
-                {
-                    b++;
-                }
-                else
-                {
-                    tot += result[i][a].data * result[*fit][b].data;
-                    a++;
-                    b++;
-                }
-            }
+            std::cout << topological[d][i] << " ";
+        }
+        std::cout << std::endl;*/
 
-            auto mat_it = std::lower_bound(matrix[i].begin(), matrix[i].end(), (uint)*fit,
-                                           [](const sparse &lhs, const uint rhs)
-                                           { return lhs.column < rhs; });
-            if (mat_it->column == *fit)
-            {
-                mat_val = mat_it->data;
-            }
-            auto res_it = std::lower_bound(result[*fit].begin(), result[*fit].end(), (uint)*fit,
-                                           [](const sparse &lhs, const uint rhs)
-                                           { return lhs.column < rhs; });
-            if (res_it->column == *fit)
-            {
-                res_val = res_it->data;
-            }
-            if ((mat_val - tot) / res_val != 0)
-            {
-                result[i].push_back({(mat_val - tot) / res_val, i, *fit});
-                tot_lines++;
-            }
-        }
-
-        if (!(i % 1000))
+#pragma omp parallel for
+        for (long i = 0; i < topological[d].size(); i++)
         {
-            std::cout << i << std::endl;
-        }
-
-        double tot = 0, mat_val = 0;
-        for (uint a = 0; a < result[i].size(); a++)
-        {
-            tot += result[i][a].data * result[i][a].data;
-        }
-        auto mat_it = std::lower_bound(matrix[i].begin(), matrix[i].end(), i,
-                                       [](const sparse &lhs, const uint rhs)
-                                       { return lhs.column < rhs; });
-        if (mat_it->column == i)
-        {
-            mat_val = mat_it->data;
-        }
-        if (mat_val - tot != 0)
-        {
-            result[i].push_back({std::sqrt(mat_val - tot), i, i});
-            tot_lines++;
+            calc_row(topological[d][i], matrix, rev_graph, result);
         }
     }
 
     auto end5 = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Operation completed in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end4).count() << " ms" << std::endl;
+    std::cout << "Operation completed for " << tot_lines << " nonzeros in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end4).count() << " ms" << std::endl;
 
     std::ofstream ofile("result.mtx");
     ofile << num_row << " " << num_col << " " << tot_lines << "\n";
