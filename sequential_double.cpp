@@ -10,15 +10,15 @@
 #include <stack>
 #include <chrono>
 // #include <omp.h>
+#include <metis.h>
 
-typedef unsigned int uint;
 typedef unsigned long long ullong;
 
 struct sparse
 {
     double data;
-    uint row;
-    uint column;
+    idx_t row;
+    idx_t column;
 };
 /*
 template<class InputIt1, class InputIt2>
@@ -37,20 +37,20 @@ const int tab32[32] = {
     8, 12, 20, 28, 15, 17, 24, 7,
     19, 27, 23, 6, 26, 5, 4, 31};
 
-int log2_32(uint32_t value)
+int log2_32(idx_t value)
 {
     value |= value >> 1;
     value |= value >> 2;
     value |= value >> 4;
     value |= value >> 8;
     value |= value >> 16;
-    return tab32[(uint32_t)(value * 0x07C4ACDD) >> 27];
+    return tab32[(idx_t)(value * 0x07C4ACDD) >> 27];
 }
 
 // Function to perform DFS and topological sorting
-void topologicalSortUtil(int v, int d, const std::vector<std::vector<uint>> &adj,
+void topologicalSortUtil(int v, int d, const std::vector<std::vector<idx_t>> &adj,
                          std::vector<bool> &visited,
-                         std::vector<std::vector<uint>> &Stack)
+                         std::vector<std::vector<idx_t>> &Stack)
 {
     // Mark the current node as visited
     visited[v] = true;
@@ -65,13 +65,13 @@ void topologicalSortUtil(int v, int d, const std::vector<std::vector<uint>> &adj
     // Push current vertex to stack which stores the result
     while (Stack.size() <= d)
     {
-        Stack.push_back(std::vector<uint>());
+        Stack.push_back(std::vector<idx_t>());
     }
     Stack[d].push_back(v);
 }
 
 // Function to perform Topological Sort
-void topologicalSort(const std::vector<std::vector<uint>> &tree, std::vector<std::vector<uint>> &topological)
+void topologicalSort(const std::vector<std::vector<idx_t>> &tree, std::vector<std::vector<idx_t>> &topological)
 {
     std::vector<bool> visited(tree.size(), false);
 
@@ -89,75 +89,95 @@ void topologicalSort(const std::vector<std::vector<uint>> &tree, std::vector<std
         }*/
 }
 
-uint calc_row(uint row, const std::vector<std::vector<sparse>> &matrix, const std::vector<std::vector<uint>> &rev_graph, std::vector<std::vector<sparse>> &result)
+idx_t calc_row(idx_t row,
+               const std::vector<std::vector<idx_t>> &rev_graph,
+               std::vector<idx_t> &m_rows,
+               std::vector<idx_t> &m_cols,
+               std::vector<double> &m_values,
+               std::vector<idx_t> &r_rows,
+               std::vector<idx_t> &r_cols,
+               std::vector<double> &r_values)
 { /*
      int temp;
      if (row == 110)
      { // Segmentation
          std::cin >> temp;
      }*/
-    uint tot_lines = 0;
-    result[row].reserve(rev_graph[row].size() + 20);
-    for (auto fit = rev_graph[row].begin(); fit != rev_graph[row].end(); fit++)
+    // std::cout << row <<"--------------" << std::endl;
+    idx_t tot_lines = 0;
+    idx_t fi = r_rows[row];
+    for (; r_cols[fi] < row; fi++)
     {
         double tot = 0, mat_val = 0, res_val = 0;
-        for (uint a = 0, b = 0; a < result[row].size() && b < result[*fit].size() && result[row][a].column < *fit && result[*fit][b].column < *fit;)
+        // for (idx_t l = m_rows[i]; l < m_rows[i + 1]; l++)
+        for (idx_t a = r_rows[r_cols[fi]], b = r_rows[row]; r_cols[a] < r_cols[fi] && b < fi;)
         {
-            if (result[row][a].column < result[*fit][b].column)
+
+            // std::cout << "par: " << r_cols[fi] << " " << row << " " << r_cols[a] << " " << r_cols[b] << " " << tot << std::endl;
+            if (r_cols[a] < r_cols[b])
             {
                 a++;
             }
-            else if (result[row][a].column > result[*fit][b].column)
+            else if (r_cols[a] > r_cols[b])
             {
                 b++;
             }
             else
             {
-                tot += result[row][a].data * result[*fit][b].data;
+                tot += r_values[a] * r_values[b];
                 a++;
                 b++;
             }
         }
 
-        auto mat_it = std::lower_bound(matrix[row].begin(), matrix[row].end(), (uint)*fit,
-                                       [](const sparse &lhs, const uint rhs)
-                                       { return lhs.column < rhs; });
-        if (mat_it->column == *fit)
+        // std::cout << "ok" << std::endl;
+
+        auto mat_it = std::lower_bound(m_cols.begin() + m_rows[row], m_cols.begin() + m_rows[row + 1], r_cols[fi]) - m_cols.begin();
+        if (m_cols[mat_it] == r_cols[fi])
         {
-            mat_val = mat_it->data;
+            mat_val = m_values[mat_it];
         }
-        auto res_it = std::lower_bound(result[*fit].begin(), result[*fit].end(), (uint)*fit,
-                                       [](const sparse &lhs, const uint rhs)
-                                       { return lhs.column < rhs; });
-        if (res_it != result[*fit].end() && res_it->column == *fit)
+        // std::cout << "ok" << std::endl;
+        auto res_it = std::lower_bound(r_cols.begin() + r_rows[r_cols[fi]], r_cols.begin() + r_rows[r_cols[fi] + 1], r_cols[fi]) - r_cols.begin();
+        if (r_cols[res_it] == r_cols[fi])
         {
-            res_val = res_it->data;
+            res_val = r_values[res_it];
         }
         if ((mat_val - tot) / res_val != 0)
         {
-            result[row].push_back({(mat_val - tot) / res_val, row, *fit});
+            r_values[fi] = (mat_val - tot) / res_val;
             tot_lines++;
         }
+        auto rev_it = std::lower_bound(r_cols.begin() + r_rows[r_cols[fi]], r_cols.begin() + r_rows[r_cols[fi] + 1], row) - r_cols.begin();
+        r_values[rev_it] = r_values[fi];
+        // std::cout << mat_val << " " << tot << " " << res_val << std::endl;
+
+        // std::cout << "!ok" << std::endl;
     }
+    // fi is now the diagonal cell!
+
+    // std::cout << "!!!ok" << std::endl;
 
     double tot = 0, mat_val = 0;
-    for (uint a = 0; a < result[row].size(); a++)
+    for (idx_t a = r_rows[row]; r_cols[a] < row; a++)
     {
-        tot += result[row][a].data * result[row][a].data;
+        tot += r_values[a] * r_values[a];
     }
-    auto mat_it = std::lower_bound(matrix[row].begin(), matrix[row].end(), row,
-                                   [](const sparse &lhs, const uint rhs)
-                                   { return lhs.column < rhs; });
+    auto mat_it = std::lower_bound(m_cols.begin() + m_rows[row], m_cols.begin() + m_rows[row + 1], row) - m_cols.begin();
 
-    if (mat_it->column == row)
+    // std::cout << "!!!ok" << std::endl;
+    if (m_cols[mat_it] == row)
     {
-        mat_val = mat_it->data;
+        mat_val = m_values[mat_it];
     }
+    // std::cout << "!!!ok" << r_rows[row + 1] - 1 << " " << r_values.size() << std::endl;
     if (mat_val - tot != 0)
     {
-        result[row].push_back({std::sqrt(mat_val - tot), row, row});
+        r_values[fi] = std::sqrt(mat_val - tot);
         tot_lines++;
     }
+    std::cout << mat_val << " " << tot  << std::endl;
+    // std::cout << "!!!ok" << std::endl;
     return tot_lines;
 }
 
@@ -166,7 +186,7 @@ int main()
 
     auto beg = std::chrono::high_resolution_clock::now();
 
-    std::ifstream file("ct20stif.mtx");
+    std::ifstream file("bcsstk03.mtx");
     int num_row, num_col, num_lines;
 
     // Ignore comments headers
@@ -178,44 +198,70 @@ int main()
 
     std::vector<std::vector<sparse>> matrix(num_row);
     std::vector<std::vector<sparse>> result(num_row);
-    std::vector<std::set<uint>> graph(num_row);
-    std::vector<std::vector<uint>> tree(num_row);
-    std::vector<std::vector<uint>> topological;
-    std::vector<std::vector<uint>> rev_graph(num_row);
+    std::vector<std::set<idx_t>> graph(num_row);
+    std::vector<std::vector<idx_t>> tree(num_row);
+    std::vector<std::vector<idx_t>> topological;
+    std::vector<std::vector<idx_t>> rev_graph(num_row);
 
-    for (uint l = 0; l < num_lines; l++)
+    std::vector<idx_t> m_rows;
+    std::vector<idx_t> m_cols;
+    std::vector<double> m_values;
+
+    std::vector<idx_t> r_rows;
+    std::vector<idx_t> r_cols;
+    std::vector<double> r_values;
+
+    for (idx_t l = 0; l < num_lines; l++)
     {
         double data;
-        uint row, col;
+        idx_t row, col;
         file >> row >> col >> data;
         matrix[row - 1].push_back({data, row - 1, col - 1});
+        if (row != col)
+            matrix[col - 1].push_back({data, col - 1, row - 1});
     }
 
     file.close();
 
-    for (uint l = 0; l < num_row; l++)
+    for (idx_t l = 0; l < num_row; l++)
     {
         std::sort(matrix[l].begin(), matrix[l].end(), [](const sparse &lhs, const sparse &rhs)
                   { return lhs.column < rhs.column; });
     }
 
+    m_rows.push_back(0);
+    for (idx_t l = 0; l < matrix.size(); l++)
+    {
+        for (idx_t i = 0; i < matrix[l].size(); i++)
+        {
+            m_cols.push_back(matrix[l][i].column);
+            m_values.push_back(matrix[l][i].data);
+        }
+        m_rows.push_back(m_cols.size());
+    }
+
+    std::cout << "Total nonzero " << m_cols.size() << std::endl;
     auto end1 = std::chrono::high_resolution_clock::now();
 
     std::cout << "File read in " << std::chrono::duration_cast<std::chrono::milliseconds>(end1 - beg).count() << " ms" << std::endl;
 
-    for (uint i = 0; i < num_row; i++)
+    for (idx_t i = 0; i < m_rows.size() - 1; i++)
     {
-        for (uint l = 0; l < matrix[i].size(); l++)
+        for (idx_t l = m_rows[i]; l < m_rows[i + 1]; l++)
         {
-            if (matrix[i][l].column < i)
+            if (m_cols[l] < i)
             {
-                graph[matrix[i][l].column].insert(i);
+                graph[m_cols[l]].insert(i);
                 // rev_graph[matrix[i][l].column].insert(i);
             }
-            else if (matrix[i][l].column > i)
+            else if (m_cols[l] > i)
             {
                 std::cout << "wrong" << std::endl;
                 return 0;
+            }
+            else
+            {
+                break;
             }
         }
     }
@@ -227,9 +273,9 @@ int main()
 
     std::cout << "Finding fills" << std::endl;
 
-    uint inserted = 0;
+    idx_t inserted = 0;
 
-    for (uint i = 0; i < num_row; i++)
+    for (idx_t i = 0; i < num_row; i++)
     {
         auto fit = graph[i].begin();
 
@@ -256,7 +302,7 @@ int main()
 
     std::cout << "Creating elimination tree (transitive reduction)" << std::endl;
 
-    for (uint i = 0; i < num_row; i++)
+    for (idx_t i = 0; i < num_row; i++)
     {
         tree[*(graph[i].begin())].push_back(i);
     }
@@ -270,9 +316,9 @@ int main()
               << " created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end31 - end3).count() << "ms" << std::endl;
 
     std::cout << "Reversing Graph" << std::endl;
-    uint tot = 0;
+    idx_t tot = 0;
 
-    for (uint i = 0; i < num_row; i++)
+    for (idx_t i = 0; i < num_row; i++)
     {
         auto fit = graph[i].begin();
 
@@ -289,29 +335,42 @@ int main()
 
     std::cout << "Reversed graph in " << std::chrono::duration_cast<std::chrono::milliseconds>(end4 - end3).count() << " ms" << std::endl;
 
+    std::cout << "Initializing result matrix" << std::endl;
+
+    r_rows.push_back(0);
+    for (idx_t l = 0; l < rev_graph.size(); l++)
+    {
+        for (idx_t i = 0; i < rev_graph[l].size(); i++)
+        {
+            r_cols.push_back(rev_graph[l][i]);
+            // m_values.push_back(matrix[l][i].data);
+        }
+        r_cols.push_back(l);
+        for (auto fit = graph[l].begin(); fit != graph[l].end(); fit++)
+        {
+            r_cols.push_back(*fit);
+            // m_values.push_back(matrix[l][i].data);
+        }
+        r_rows.push_back(r_cols.size());
+    }
+    r_values.resize(r_cols.size(), 0);
+
+    std::cout << "R Mat " << r_rows[0] << r_rows[1] << std::endl;
+
     std::cout << "Graph created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end4 - end1).count() << " ms" << std::endl;
 
     graph.clear();
     graph.shrink_to_fit();
 
-    uint tot_lines = 0;
+    idx_t tot_lines = 0;
 
-    for (uint d = topological.size() - 1; d != UINT32_MAX; d--)
+    for (idx_t i = 0; i < num_row; i++)
     {
-        if (d % 1000 == 0)
-            std::cout << d << " " << topological[d].size() << std::endl;
-            /*
-            for (long i = 0; i < topological[d].size(); i++)
-            {
-                std::cout << topological[d][i] << " ";
-            }
-            std::cout << std::endl;*/
-
-#pragma omp parallel for schedule(static, 1) reduction( + : tot_lines )
-        for (long i = 0; i < topological[d].size(); i++)
+        if (!(i % 1000))
         {
-            tot_lines += calc_row(topological[d][i], matrix, rev_graph, result);
+            std::cout << i << " " << num_row << std::endl;
         }
+        tot_lines += calc_row(i, rev_graph, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
     }
 
     auto end5 = std::chrono::high_resolution_clock::now();
@@ -319,13 +378,13 @@ int main()
     std::cout << "Operation completed for " << tot_lines << " nonzeros in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end4).count() << " ms" << std::endl;
 
     std::ofstream ofile("result.mtx");
-    ofile << num_row << " " << num_col << " " << tot_lines << "\n";
+    ofile << num_row << " " << num_col << " " << r_cols.size() << "\n";
 
-    for (uint i = 0; i < num_row; i++)
+    for (idx_t i = 0; i < r_rows.size() - 1; i++)
     {
-        for (uint l = 0; l < result[i].size(); l++)
+        for (idx_t l = r_rows[i]; l < r_rows[i + 1]; l++)
         {
-            ofile << i + 1 << " " << result[i][l].column + 1 << " " << result[i][l].data << "\n";
+            ofile << i + 1 << " " << r_cols[l] + 1 << " " << r_values[l] << "\n";
         }
     }
 
