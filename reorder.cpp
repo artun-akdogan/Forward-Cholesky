@@ -181,7 +181,7 @@ int main()
 
     auto beg = std::chrono::high_resolution_clock::now();
 
-    std::ifstream file("bcsstk03.mtx");
+    std::ifstream file("1138_bus.mtx");
     int num_row, num_col, num_lines;
 
     // Ignore comments headers
@@ -192,7 +192,7 @@ int main()
     file >> num_row >> num_col >> num_lines;
 
     std::vector<std::vector<sparse>> matrix(num_row);
-    std::vector<std::vector<sparse>> result(num_row);
+    std::vector<std::vector<sparse>> ordered_matrix(num_row);
     std::vector<std::set<idx_t>> graph(num_row);
     std::vector<std::vector<idx_t>> tree(num_row);
     std::vector<std::vector<idx_t>> topological;
@@ -253,18 +253,36 @@ int main()
     idx_t *perm = new idx_t[row_size];  // Permutation array
     idx_t *iperm = new idx_t[row_size]; // Inverse permutation array
 
+    std::cout << "permutation arrays initialized " << std::endl;
+
     // Perform fill-reducing matrix ordering
     METIS_NodeND(&row_size, m_rows_unordered.data(), m_cols_unordered.data(), nullptr, options, perm, iperm);
+    auto end111 = std::chrono::high_resolution_clock::now();
+    std::cout << "Metis returned in " << std::chrono::duration_cast<std::chrono::milliseconds>(end111 - end1).count() << " ms" << std::endl;
 
     // This reorder mechanism might be erroneous
-    m_rows.push_back(0);
-    for (idx_t i = 0; i < row_size; i++)
+    for (idx_t new_row = 0; new_row < row_size; new_row++)
     {
-        std::cout << perm[i] << std::endl;
-        for (idx_t l = m_rows_unordered[perm[i]]; l < m_rows_unordered[perm[i]+1]; l++)
+        idx_t old_row = perm[new_row];
+
+        for (idx_t old_col_itr = m_rows_unordered[old_row]; old_col_itr < m_rows_unordered[old_row+1]; old_col_itr++)
         {
-            m_cols.push_back(m_cols_unordered[l]);
-            m_values.push_back(m_values_unordered[l]);
+            idx_t new_col = iperm[m_cols_unordered[old_col_itr]];
+            ordered_matrix[new_row].push_back({m_values_unordered[old_col_itr], new_row, new_col});
+        }
+    }
+    for (idx_t l = 0; l < num_row; l++)
+    {
+        std::sort(ordered_matrix[l].begin(), ordered_matrix[l].end(), [](const sparse &lhs, const sparse &rhs)
+                  { return lhs.column < rhs.column; });
+    }
+    m_rows.push_back(0);
+    for (idx_t l = 0; l < ordered_matrix.size(); l++)
+    {
+        for (idx_t i = 0; i < ordered_matrix[l].size(); i++)
+        {
+            m_cols.push_back(ordered_matrix[l][i].column);
+            m_values.push_back(ordered_matrix[l][i].data);
         }
         m_rows.push_back(m_cols.size());
     }

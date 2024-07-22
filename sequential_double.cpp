@@ -89,6 +89,67 @@ void topologicalSort(const std::vector<std::vector<idx_t>> &tree, std::vector<st
         }*/
 }
 
+unsigned long long first = 0, second=0, third=0, fourth=0; 
+
+idx_t calc_row_iterate(idx_t row,
+               const std::vector<std::vector<idx_t>> &rev_graph,
+               std::vector<idx_t> &m_rows,
+               std::vector<idx_t> &m_cols,
+               std::vector<double> &m_values,
+               std::vector<idx_t> &r_rows,
+               std::vector<idx_t> &r_cols,
+               std::vector<double> &r_values)
+{
+    idx_t tot_lines = 0;
+    idx_t fi = r_rows[row];
+    idx_t old_fi = r_rows[row];
+    first++;
+    for (; r_cols[fi] < row; fi++)
+    {
+        double tot = 0, mat_val = 0, res_val = 0;
+        // for (idx_t l = m_rows[i]; l < m_rows[i + 1]; l++)
+        auto rev_it = std::lower_bound(r_cols.begin() + r_rows[r_cols[old_fi]], r_cols.begin() + r_rows[r_cols[old_fi] + 1], r_cols[old_fi]) - r_cols.begin();
+        auto max_it = std::lower_bound(r_cols.begin() + rev_it, r_cols.begin() + r_rows[r_cols[old_fi] + 1], row) - r_cols.begin();
+        second++;
+        idx_t cur_it = r_rows[row];
+        for (long se = rev_it + 1; se < max_it; se++)
+        {
+            third++;
+            while (r_cols[cur_it] != r_cols[se]){
+                fourth++;
+                cur_it++;
+            }
+            r_values[cur_it] += r_values[se] * r_values[max_it];
+        }
+
+        // std::cout << "ok" << std::endl;
+
+        auto mat_it = std::lower_bound(m_cols.begin() + m_rows[row], m_cols.begin() + m_rows[row + 1], r_cols[fi]) - m_cols.begin();
+        if (m_cols[mat_it] == r_cols[fi])
+        {
+            mat_val = m_values[mat_it];
+        }
+        // std::cout << "ok" << std::endl;
+        auto res_it = std::lower_bound(r_cols.begin() + r_rows[r_cols[fi]], r_cols.begin() + r_rows[r_cols[fi] + 1], r_cols[fi]) - r_cols.begin();
+        if (r_cols[res_it] == r_cols[fi])
+        {
+            res_val = r_values[res_it];
+        }
+        r_values[fi] = (mat_val - r_values[fi]) / res_val;
+        if (r_values[fi] != 0)
+        {
+            tot_lines++;
+        }
+        auto rev_res_it = std::lower_bound(r_cols.begin() + r_rows[r_cols[fi]], r_cols.begin() + r_rows[r_cols[fi] + 1], row) - r_cols.begin();
+        r_values[rev_res_it] = r_values[fi];
+        // std::cout << mat_val << " " << tot << " " << res_val << std::endl;
+        old_fi = fi;
+
+        // std::cout << "!ok" << std::endl;
+    }
+    return tot_lines;
+}
+
 idx_t calc_row(idx_t row,
                const std::vector<std::vector<idx_t>> &rev_graph,
                std::vector<idx_t> &m_rows,
@@ -105,56 +166,9 @@ idx_t calc_row(idx_t row,
      }*/
     // std::cout << row <<"--------------" << std::endl;
     idx_t tot_lines = 0;
-    idx_t fi = r_rows[row];
-    for (; r_cols[fi] < row; fi++)
-    {
-        double tot = 0, mat_val = 0, res_val = 0;
-        // for (idx_t l = m_rows[i]; l < m_rows[i + 1]; l++)
-        for (idx_t a = r_rows[r_cols[fi]], b = r_rows[row]; r_cols[a] < r_cols[fi] && b < fi;)
-        {
-
-            // std::cout << "par: " << r_cols[fi] << " " << row << " " << r_cols[a] << " " << r_cols[b] << " " << tot << std::endl;
-            if (r_cols[a] < r_cols[b])
-            {
-                a++;
-            }
-            else if (r_cols[a] > r_cols[b])
-            {
-                b++;
-            }
-            else
-            {
-                tot += r_values[a] * r_values[b];
-                a++;
-                b++;
-            }
-        }
-
-        // std::cout << "ok" << std::endl;
-
-        auto mat_it = std::lower_bound(m_cols.begin() + m_rows[row], m_cols.begin() + m_rows[row + 1], r_cols[fi]) - m_cols.begin();
-        if (m_cols[mat_it] == r_cols[fi])
-        {
-            mat_val = m_values[mat_it];
-        }
-        // std::cout << "ok" << std::endl;
-        auto res_it = std::lower_bound(r_cols.begin() + r_rows[r_cols[fi]], r_cols.begin() + r_rows[r_cols[fi] + 1], r_cols[fi]) - r_cols.begin();
-        if (r_cols[res_it] == r_cols[fi])
-        {
-            res_val = r_values[res_it];
-        }
-        if ((mat_val - tot) / res_val != 0)
-        {
-            r_values[fi] = (mat_val - tot) / res_val;
-            tot_lines++;
-        }
-        auto rev_it = std::lower_bound(r_cols.begin() + r_rows[r_cols[fi]], r_cols.begin() + r_rows[r_cols[fi] + 1], row) - r_cols.begin();
-        r_values[rev_it] = r_values[fi];
-        // std::cout << mat_val << " " << tot << " " << res_val << std::endl;
-
-        // std::cout << "!ok" << std::endl;
-    }
+    tot_lines += calc_row_iterate(row, rev_graph, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
     // fi is now the diagonal cell!
+    idx_t fi = std::lower_bound(r_cols.begin() + r_rows[row], r_cols.begin() + r_rows[row + 1], row) - r_cols.begin();
 
     // std::cout << "!!!ok" << std::endl;
 
@@ -176,7 +190,7 @@ idx_t calc_row(idx_t row,
         r_values[fi] = std::sqrt(mat_val - tot);
         tot_lines++;
     }
-    std::cout << mat_val << " " << tot  << std::endl;
+    // std::cout << mat_val << " " << tot  << std::endl;
     // std::cout << "!!!ok" << std::endl;
     return tot_lines;
 }
@@ -186,7 +200,7 @@ int main()
 
     auto beg = std::chrono::high_resolution_clock::now();
 
-    std::ifstream file("bcsstk03.mtx");
+    std::ifstream file("adobe.mtx");
     int num_row, num_col, num_lines;
 
     // Ignore comments headers
@@ -240,7 +254,7 @@ int main()
         m_rows.push_back(m_cols.size());
     }
 
-    std::cout << "Total nonzero " << m_cols.size() << std::endl;
+    std::cout << "Total nonzero " << (m_cols.size() + matrix.size())/2 << std::endl;
     auto end1 = std::chrono::high_resolution_clock::now();
 
     std::cout << "File read in " << std::chrono::duration_cast<std::chrono::milliseconds>(end1 - beg).count() << " ms" << std::endl;
@@ -376,13 +390,14 @@ int main()
     auto end5 = std::chrono::high_resolution_clock::now();
 
     std::cout << "Operation completed for " << tot_lines << " nonzeros in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end4).count() << " ms" << std::endl;
+    std::cout << "Operation iterations: "  << first << " " << second << " " << third << " " << fourth << " " << std::endl;
 
     std::ofstream ofile("result.mtx");
-    ofile << num_row << " " << num_col << " " << r_cols.size() << "\n";
+    ofile << num_row << " " << num_col << " " << (r_cols.size() +num_row)/2 << "\n";
 
     for (idx_t i = 0; i < r_rows.size() - 1; i++)
     {
-        for (idx_t l = r_rows[i]; l < r_rows[i + 1]; l++)
+        for (idx_t l = r_rows[i]; l < r_rows[i + 1] && r_cols[l] <= i; l++)
         {
             ofile << i + 1 << " " << r_cols[l] + 1 << " " << r_values[l] << "\n";
         }

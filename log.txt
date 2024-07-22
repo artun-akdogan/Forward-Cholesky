@@ -1,3 +1,6 @@
+// Matlab time
+Total for ct20stif: 6.231 seconds
+
 // Iteration 1
 File read in 356 ms
 Base graph created in 64 ms
@@ -9,7 +12,7 @@ Graph created in 7565 ms
 ...
 Operation completed in 774487 ms
 File written in 36901 ms
-Program completed in 819310 ms ()
+Program completed in 819310 ms
 
 
 // Iteration 2

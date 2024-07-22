@@ -1,0 +1,24 @@
+// First iteration
+Total nonzero 2698463
+File read in 401 ms
+Base graph created in 55 ms
+Finding fills
+Found fills in 5993 ms
+Creating elimination tree (transitive reduction)
+Tree with topological depth 35400 for rows 52329 created in 6ms
+Reversing Graph
+Total nonzero: 114134033
+Reversed graph in 1397 ms
+Initializing result matrix
+R Mat 084
+Graph created in 7445 ms
+...
+Operation completed for 113073424 nonzeros in 537807 ms
+File written in 25342 ms
+Program completed in 563149 ms
+
+
+Test iteration:
+Operation completed for 113,073,424 nonzeros in 957036 ms
+Operation iterations: 52329 114.081.704 231.406.817.923 1.448.352.491.360
+10^4, 10^8, 10^11, 10^12

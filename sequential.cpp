@@ -88,7 +88,7 @@ int main()
 
     auto beg = std::chrono::high_resolution_clock::now();
 
-    std::ifstream file("ct20stif.mtx");
+    std::ifstream file("bcsstk03.mtx");
     int num_row, num_col, num_lines, tot_lines = 0;
 
     // Ignore comments headers

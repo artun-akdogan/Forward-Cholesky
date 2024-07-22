@@ -15,17 +15,17 @@ File written in 45072 ms
 Program completed in 843782 ms
 
 // Parallel execution
-File read in 375 ms
+File read in 379 ms
 Base graph created in 59 ms
 Finding fills
-Found fills in 6447 ms
+Found fills in 6672 ms
 Creating elimination tree (transitive reduction)
-Tree with topological depth 35400 for rows 52329 created in 6ms
+Tree with topological depth 35400 for rows 52329 created in 7ms
 Reversing Graph
 Total nonzero: 114134033
-Reversed graph in 1450 ms
-Graph created in 7957 ms
+Reversed graph in 1485 ms
+Graph created in 8218 ms
 ...
-Operation completed for 0 nonzeros in 817045 ms
-File written in 47342 ms
-Program completed in 872721 ms
+Operation completed for 113073424 nonzeros in 842272 ms
+File written in 39531 ms
+Program completed in 890401 ms
