@@ -10,6 +10,15 @@ typedef int mattype;
 typedef int indtype;
 typedef double dattype;
 
+
+struct sparse_raw
+{
+    dattype data;
+    mattype row;
+    mattype column;
+};
+
+
 inline indtype col_find(const mattype *arr, mattype target, indtype start, indtype end)
 {
     while (end > start)
