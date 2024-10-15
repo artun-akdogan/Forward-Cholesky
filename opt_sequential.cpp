@@ -6,9 +6,8 @@
 #include <algorithm>
 
 #include "opt_sequential_common.h"
-#include "opt_sequential_lower.h"
-// #include "opt_sequential_upper.h"
-
+// #include "opt_sequential_lower.h"
+#include "opt_sequential_upper.h"
 
 int main()
 {
@@ -52,10 +51,10 @@ int main()
     auto end11 = std::chrono::high_resolution_clock::now();
     std::cout << "Reorder in " << std::chrono::duration_cast<std::chrono::milliseconds>(end11 - end1).count() << " ms" << std::endl;
 
-
     for (mattype l = 0; l < num_row; l++)
     {
-        for (mattype i = 0; i < matrix[l].size(); i++){
+        for (mattype i = 0; i < matrix[l].size(); i++)
+        {
             if (matrix[l][i].column < l)
             {
                 rev_graph[matrix[l][i].column].insert(l);
@@ -125,18 +124,19 @@ int main()
     std::cout << "Tree with topological depth " << topological.size() << " for rows " << num_row
               << " created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end31 - end3).count() << "ms" << std::endl;
 
-
     indtype *m_rows, *r_rows;
     mattype *m_cols, *r_cols;
     dattype *m_values, *r_values;
 
-    lower_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
+    // lower_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
+    upper_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
 
     matrix.clear();
     matrix.shrink_to_fit();
 
-    lower_res_init(num_row, r_rows, r_cols, r_values, rev_graph);
-    
+    // lower_res_init(num_row, r_rows, r_cols, r_values, rev_graph);
+    upper_res_init(num_row, r_rows, r_cols, r_values, rev_graph);
+
     rev_graph.clear();
     rev_graph.shrink_to_fit();
 
@@ -144,8 +144,10 @@ int main()
 
     std::cout << "Graph created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end41 - end1).count() << " ms" << std::endl;
 
+    // lower_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
+    upper_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
 
-    lower_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
+    std::cout << "Total iteration: " <<total << std::endl;
 
     delete[] m_rows;
     delete[] m_cols;

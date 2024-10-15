@@ -10,7 +10,6 @@ typedef int mattype;
 typedef int indtype;
 typedef double dattype;
 
-
 struct sparse_raw
 {
     dattype data;
@@ -18,11 +17,13 @@ struct sparse_raw
     mattype column;
 };
 
+long long total = 0;
 
-inline indtype col_find(const mattype *arr, mattype target, indtype start, indtype end)
+inline indtype col_find(const mattype *arr, const mattype target, indtype start, indtype end)
 {
     while (end > start)
     {
+        total++;
         indtype mid = (start + end) / 2;
 
         if (arr[mid] > target)
@@ -41,11 +42,26 @@ inline indtype col_find(const mattype *arr, mattype target, indtype start, indty
     return COLMAX;
 }
 
-inline indtype col_find_it(const mattype *arr, mattype target, indtype start, indtype end)
+inline indtype col_find_iter(const mattype *arr, const mattype target, indtype start, indtype end)
+{
+    while (end > start)
+    {
+        total++;
+        if (arr[start] == target)
+        {
+            return start;
+        }
+        start++;
+    }
+    return COLMAX;
+}
+
+inline indtype col_find_custom(const mattype *arr, const mattype target, indtype start, indtype end)
 {
     indtype iter = 1;
     while (end > start)
     {
+        total++;
         indtype mid = start + iter - 1;
 
         if (mid >= end)
@@ -62,6 +78,35 @@ inline indtype col_find_it(const mattype *arr, mattype target, indtype start, in
         }
         start = mid + 1;
         iter <<= 1;
+    }
+    return COLMAX;
+}
+
+inline indtype col_find_custom_iter(const mattype *arr, const mattype target, indtype start, indtype end)
+{
+    indtype iter = 1;
+    while (end > start)
+    {
+        total++;
+        indtype mid = start + iter - 1;
+
+        if (mid >= end)
+        {
+            iter=1;
+        }
+        else if (arr[mid] > target)
+        {
+            end = mid;
+            iter=1;
+        }
+        else if (arr[mid] == target)
+        {
+            return mid;
+        }
+        else{
+            start = mid + 1;
+            iter <<= 1;
+        }
     }
     return COLMAX;
 }

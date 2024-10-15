@@ -89,7 +89,7 @@ void lower_cholesky_calculate(const mattype num_rows,
 {
     for (mattype row = 0; row < num_rows; row++)
     {
-        //std::cout << row << " " << num_rows << std::endl;
+        // std::cout << row << " " << num_rows << std::endl;
         if (!(row % 1000))
         {
             std::cout << row << " " << num_rows << std::endl;
@@ -98,8 +98,8 @@ void lower_cholesky_calculate(const mattype num_rows,
         {
             dattype tot = 0, mat_val = 0, res_val = 0;
 
-            //std::cout << "->ok " << fi << " " << r_cols[fi] << std::endl;
-            // for (idx_t l = m_rows[i]; l < m_rows[i + 1]; l++)
+            // std::cout << "->ok " << fi << " " << r_cols[fi] << std::endl;
+            //  for (idx_t l = m_rows[i]; l < m_rows[i + 1]; l++)
             for (indtype a = r_rows[r_cols[fi]], b = r_rows[row]; a < r_rows[r_cols[fi] + 1] && b < fi;)
             {
                 // std::cout << "par: " << r_values[fi].column << " " << row << " " << r_values[a].column << " " << r_values[b].column << " " << tot << std::endl;
@@ -123,7 +123,7 @@ void lower_cholesky_calculate(const mattype num_rows,
             {
                 mat_val = m_values[mat_it];
             }
-            //std::cout << "ok" << std::endl;
+            // std::cout << "ok" << std::endl;
             indtype res_it = col_find(r_cols, r_cols[fi], r_rows[r_cols[fi]], r_rows[r_cols[fi] + 1]);
             if (res_it != COLMAX)
             {
