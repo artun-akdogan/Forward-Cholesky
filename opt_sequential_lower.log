@@ -1,0 +1,23 @@
+// sequential_upper with col_find_iter:
+File read in 390 ms
+Reorder in 0 ms
+Reverse graph created in 61 ms
+Finding fills
+Found fills in 6557 ms
+Creating elimination tree (transitive reduction)
+Tree with topological depth 35400 for rows 52329 created in 7ms
+Reversing Graph
+Total nonzero: 114134033
+Normalized graph in 1471 ms
+Initializing result matrix
+R Mat 114134033 114134033
+Graph created in 10419 ms
+0 52329
+1000 52329
+...
+51000 52329
+52000 52329
+Total iteration: 1572509994
+Operation completed for 114134033 nonzeros in 633396 ms
+File written in 41452 ms
+Program completed in 685659 ms
