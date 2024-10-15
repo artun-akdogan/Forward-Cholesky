@@ -1,0 +1,22 @@
+File read in 383 ms
+Reorder in 0 ms
+Reverse graph created in 62 ms
+Finding fills
+Found fills in 6450 ms
+Creating elimination tree (transitive reduction)
+Tree with topological depth 35400 for rows 52329 created in 7ms
+Reversing Graph
+Total nonzero: 114134033
+Normalized graph in 1409 ms
+Initializing result matrix
+R Mat 114134033 114134033
+Graph created in 10166 ms
+0 35400
+1000 35400
+...
+34000 35400
+35000 35400
+Total iteration: 1570035113
+Operation completed for 114134033 nonzeros in 547160 ms
+File written in 23765 ms
+Program completed in 581476 ms

@@ -92,18 +92,19 @@ inline indtype col_find_custom_iter(const mattype *arr, const mattype target, in
 
         if (mid >= end)
         {
-            iter=1;
+            iter = 1;
         }
         else if (arr[mid] > target)
         {
             end = mid;
-            iter=1;
+            iter = 1;
         }
         else if (arr[mid] == target)
         {
             return mid;
         }
-        else{
+        else
+        {
             start = mid + 1;
             iter <<= 1;
         }
@@ -116,7 +117,8 @@ inline indtype col_find_custom_iter(const mattype *arr, const mattype target, in
 // Function to perform DFS and topological sorting
 void topologicalSortUtil(int v, int d, const std::vector<std::vector<mattype>> &adj,
                          std::vector<bool> &visited,
-                         std::vector<std::vector<mattype>> &Stack)
+                         std::vector<std::vector<mattype>> &Stack,
+                         mattype *topologicOrder)
 {
     // Mark the current node as visited
     visited[v] = true;
@@ -125,7 +127,7 @@ void topologicalSortUtil(int v, int d, const std::vector<std::vector<mattype>> &
     for (auto x : adj[v])
     {
         if (!visited[x])
-            topologicalSortUtil(x, d + 1, adj, visited, Stack);
+            topologicalSortUtil(x, d + 1, adj, visited, Stack, topologicOrder);
     }
 
     // Push current vertex to stack which stores the result
@@ -134,10 +136,13 @@ void topologicalSortUtil(int v, int d, const std::vector<std::vector<mattype>> &
         Stack.push_back(std::vector<mattype>());
     }
     Stack[d].push_back(v);
+    topologicOrder[v] = d;
 }
 
 // Function to perform Topological Sort
-void topologicalSort(const std::vector<std::vector<mattype>> &tree, std::vector<std::vector<mattype>> &topological)
+void topologicalSort(const std::vector<std::vector<mattype>> &tree,
+                     std::vector<std::vector<mattype>> &topological,
+                     mattype *topologicOrder)
 {
     std::vector<bool> visited(tree.size(), false);
 
@@ -147,7 +152,7 @@ void topologicalSort(const std::vector<std::vector<mattype>> &tree, std::vector<
     for (int i = tree.size() - 1; i >= 0; i--)
     {
         if (!visited[i])
-            topologicalSortUtil(i, 0, tree, visited, topological);
+            topologicalSortUtil(i, 0, tree, visited, topological, topologicOrder);
     }
     /*
         for (int i = 0; i < topological.size(); i++){

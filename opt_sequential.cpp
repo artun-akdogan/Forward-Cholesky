@@ -6,8 +6,27 @@
 #include <algorithm>
 
 #include "opt_sequential_common.h"
-// #include "opt_sequential_lower.h"
+
+// #define UPPER
+#define PARALLEL
+
+#ifdef UPPER
+
+#ifdef PARALLEL
+#include "opt_sequential_upper_parallel.h"
+#else
 #include "opt_sequential_upper.h"
+#endif
+
+#else
+
+#ifdef PARALLEL
+#include "opt_sequential_lower_parallel.h"
+#else
+#include "opt_sequential_lower.h"
+#endif
+
+#endif
 
 int main()
 {
@@ -115,7 +134,8 @@ int main()
     {
         tree[*(rev_graph[i].begin())].push_back(i);
     }
-    topologicalSort(tree, topological);
+    mattype *topologicOrder = new mattype[num_row];
+    topologicalSort(tree, topological, topologicOrder);
     tree.clear();
     tree.shrink_to_fit();
 
@@ -128,14 +148,20 @@ int main()
     mattype *m_cols, *r_cols;
     dattype *m_values, *r_values;
 
-    // lower_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
+#ifdef UPPER
     upper_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
+#else
+    lower_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
+#endif
 
     matrix.clear();
     matrix.shrink_to_fit();
 
-    // lower_res_init(num_row, r_rows, r_cols, r_values, rev_graph);
+#ifdef UPPER
     upper_res_init(num_row, r_rows, r_cols, r_values, rev_graph);
+#else
+    lower_res_init(num_row, r_rows, r_cols, r_values, rev_graph);
+#endif
 
     rev_graph.clear();
     rev_graph.shrink_to_fit();
@@ -144,14 +170,18 @@ int main()
 
     std::cout << "Graph created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end41 - end1).count() << " ms" << std::endl;
 
-    // lower_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
+#ifdef UPPER
     upper_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
+#else
+    lower_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values, topological, topologicOrder);
+#endif
 
-    std::cout << "Total iteration: " <<total << std::endl;
+    std::cout << "Total iteration: " << total << std::endl;
 
     delete[] m_rows;
     delete[] m_cols;
     delete[] m_values;
+    delete[] topologicOrder;
 
     auto end5 = std::chrono::high_resolution_clock::now();
 

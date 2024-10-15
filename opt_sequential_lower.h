@@ -85,7 +85,9 @@ void lower_cholesky_calculate(const mattype num_rows,
                               const dattype *m_values,
                               const indtype *r_rows,
                               const mattype *r_cols,
-                              dattype *r_values)
+                              dattype *r_values,
+                              const std::vector<std::vector<mattype>> &topological,
+                              const mattype *topologicOrder)
 {
     for (mattype row = 0; row < num_rows; row++)
     {
@@ -100,22 +102,25 @@ void lower_cholesky_calculate(const mattype num_rows,
 
             // std::cout << "->ok " << fi << " " << r_cols[fi] << std::endl;
             //  for (idx_t l = m_rows[i]; l < m_rows[i + 1]; l++)
-            for (indtype a = r_rows[r_cols[fi]], b = r_rows[row]; a < r_rows[r_cols[fi] + 1] && b < fi;)
+            if (topologicOrder[row] < topologicOrder[r_cols[fi]])
             {
-                // std::cout << "par: " << r_values[fi].column << " " << row << " " << r_values[a].column << " " << r_values[b].column << " " << tot << std::endl;
-                if (r_cols[a] < r_cols[b])
+                for (indtype a = r_rows[r_cols[fi]], b = r_rows[row]; a < r_rows[r_cols[fi] + 1] && b < fi;)
                 {
-                    a++;
-                }
-                else if (r_cols[a] > r_cols[b])
-                {
-                    b++;
-                }
-                else
-                {
-                    tot += r_values[a] * r_values[b];
-                    a++;
-                    b++;
+                    // std::cout << "par: " << r_values[fi].column << " " << row << " " << r_values[a].column << " " << r_values[b].column << " " << tot << std::endl;
+                    if (r_cols[a] < r_cols[b])
+                    {
+                        a++;
+                    }
+                    else if (r_cols[a] > r_cols[b])
+                    {
+                        b++;
+                    }
+                    else
+                    {
+                        tot += r_values[a] * r_values[b];
+                        a++;
+                        b++;
+                    }
                 }
             }
             indtype mat_it = col_find(m_cols, r_cols[fi], m_rows[row], m_rows[row + 1]);
