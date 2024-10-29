@@ -7,7 +7,7 @@
 
 #include "opt_sequential_common.h"
 
-// #define UPPER
+#define UPPER
 #define PARALLEL
 #define REORDER
 
@@ -35,23 +35,36 @@
 #endif
 
 
-void lower_mat_init_structure(const mattype num_rows,
+void upper_mat_init_structure(const mattype num_rows,
                     const indtype num_lines,
                     indtype *&m_rows,
                     mattype *&m_cols,
                     const std::vector<std::vector<sparse_raw>> &matrix)
 {
+    std::vector<std::vector<sparse_raw>> rev_matrix(num_rows);
+    for (mattype l = 0; l < num_rows; l++)
+    {
+        for (mattype i = 0; i < matrix[l].size(); i++)
+        {
+            rev_matrix[matrix[l][i].column].push_back({matrix[l][i].data, matrix[l][i].column, matrix[l][i].row});
+        }
+    }
+    for (mattype l = 0; l < num_rows; l++)
+    {
+        std::sort(rev_matrix[l].begin(), rev_matrix[l].end(), [](const sparse_raw &lhs, const sparse_raw &rhs)
+                  { return lhs.column < rhs.column; });
+    }
     m_rows = new indtype[num_rows + 1];
     m_cols = new mattype[num_lines];
 
     m_rows[0] = 0;
     for (mattype l = 0; l < num_rows; l++)
     {
-        for (mattype i = 0; i < matrix[l].size(); i++)
+        for (mattype i = 0; i < rev_matrix[l].size(); i++)
         {
-            m_cols[m_rows[l] + i] = matrix[l][i].column;
+            m_cols[m_rows[l] + i] = rev_matrix[l][i].column;
         }
-        m_rows[l + 1] = matrix[l].size() + m_rows[l];
+        m_rows[l + 1] = rev_matrix[l].size() + m_rows[l];
     }
 }
 
@@ -102,7 +115,7 @@ int main()
 #ifdef REORDER
     int perm [num_row+1] ;		/* note the size is N+1 */
     int stats [COLAMD_STATS] ;	/* for colamd and symamd output statistics */
-    lower_mat_init_structure(num_row, num_lines, m_rows, m_cols, matrix);
+    upper_mat_init_structure(num_row, num_lines, m_rows, m_cols, matrix);
     int ok = symamd (num_row, m_cols, m_rows, perm, (double *) NULL, stats, &calloc, &free) ;
     symamd_report (stats) ;
 
@@ -112,8 +125,30 @@ int main()
 	exit (1) ;
     }
 
+    int iperm [num_row];
+    for(int i=0; i<num_row; i++){
+        iperm[perm[i]]=i;
+    }
+
     delete [] m_rows;
     delete [] m_cols;
+
+    std::vector<std::vector<sparse_raw>> reordered_matrix(num_row);
+    for (mattype l = 0; l < num_row; l++)
+    {
+        for (mattype i = 0; i < matrix[l].size(); i++)
+        {
+            reordered_matrix[iperm[matrix[l][i].row]].push_back({matrix[l][i].data, iperm[matrix[l][i].row], iperm[matrix[l][i].column]});
+        }
+    }
+
+    for (mattype l = 0; l < num_row; l++)
+    {
+        std::sort(reordered_matrix[l].begin(), reordered_matrix[l].end(), [](const sparse_raw &lhs, const sparse_raw &rhs)
+                  { return lhs.column < rhs.column; });
+    }
+    matrix = reordered_matrix;
+
     auto end11 = std::chrono::high_resolution_clock::now();
     std::cout << "Reorder in " << std::chrono::duration_cast<std::chrono::milliseconds>(end11 - end1).count() << " ms" << std::endl;
 #endif
