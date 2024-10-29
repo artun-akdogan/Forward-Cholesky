@@ -244,8 +244,26 @@ int main()
     std::cout << "File read in " << std::chrono::duration_cast<std::chrono::milliseconds>(end1 - beg).count() << " ms" << std::endl;
  
     // METIS options
-    idx_t options[METIS_NOPTIONS];
-    METIS_SetDefaultOptions(options);
+
+    int Opt [METIS_NOPTIONS], nn, zero = 0 ;
+    METIS_SetDefaultOptions(Opt);
+
+    Opt [METIS_OPTION_DBGLVL] = 2559 ;	/* use defaults */
+    //Opt [METIS_OPTION_CTYPE] = METIS_CTYPE_RM ;	/* use defaults */
+    Opt [METIS_OPTION_PFACTOR] = 100 ;	/* use defaults */
+    Opt [METIS_OPTION_UFACTOR] = 100 ;	/* use defaults */
+    //Opt [METIS_OPTION_PTYPE] = METIS_PTYPE_KWAY;	/* use defaults */
+    //Opt [METIS_OPTION_RTYPE] = METIS_RTYPE_SEP2SIDED;	/* use defaults */
+    //Opt [METIS_OPTION_OBJTYPE] = METIS_OBJTYPE_NODE;	/* use defaults */
+    //Opt [METIS_OPTION_IPTYPE] = METIS_IPTYPE_RANDOM;	/* use defaults */
+    Opt [METIS_OPTION_SEED] = 12345;	/* use defaults */
+    //Opt [1] = 3 ;	/* matching type */
+    //Opt [2] = 1 ;	/* init. partitioning algo*/
+    //Opt [3] = 2 ;	/* refinement algorithm */
+    //Opt [4] = 0 ;	/* no debug */
+    //Opt [5] = 1 ;	/* initial compression */
+    //Opt [6] = 0 ;	/* no dense node removal */
+    //Opt [7] = 1 ;	/* number of separators @ each step */
 
     idx_t row_size = m_rows_unordered.size() - 1;
 
@@ -253,10 +271,16 @@ int main()
     idx_t *perm = new idx_t[row_size];  // Permutation array
     idx_t *iperm = new idx_t[row_size]; // Inverse permutation array
 
-    std::cout << "permutation arrays initialized " << std::endl;
+    std::cout << "permutation arrays initialized "  << std::endl;
 
     // Perform fill-reducing matrix ordering
-    METIS_NodeND(&row_size, m_rows_unordered.data(), m_cols_unordered.data(), nullptr, options, perm, iperm);
+    nn = row_size;
+    METIS_NodeND(&nn, m_rows_unordered.data(), m_cols_unordered.data(), 0, Opt, perm, iperm);
+
+    std::cout << nn <<" "<< row_size  << std::endl;
+
+
+    row_size = nn;
     auto end111 = std::chrono::high_resolution_clock::now();
     std::cout << "Metis returned in " << std::chrono::duration_cast<std::chrono::milliseconds>(end111 - end1).count() << " ms" << std::endl;
 

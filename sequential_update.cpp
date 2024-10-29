@@ -10,7 +10,7 @@
 #include <stack>
 #include <chrono>
 // #include <omp.h>
-#include <metis.h>
+ #include <metis.h>
 
 typedef unsigned long long ullong;
 
@@ -181,7 +181,7 @@ int main()
 
     auto beg = std::chrono::high_resolution_clock::now();
 
-    std::ifstream file("bcsstk03.mtx");
+    std::ifstream file("ct20stif.mtx");
     int num_row, num_col, num_lines;
 
     // Ignore comments headers
@@ -352,6 +352,7 @@ int main()
 
     graph.clear();
     graph.shrink_to_fit();
+    auto end41 = std::chrono::high_resolution_clock::now();
 
     idx_t tot_lines = 0;
 
@@ -366,7 +367,7 @@ int main()
 
     auto end5 = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Operation completed for " << tot_lines << " nonzeros in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end4).count() << " ms" << std::endl;
+    std::cout << "Operation completed for " << tot_lines << " nonzeros in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end41).count() << " ms" << std::endl;
 
     std::ofstream ofile("result.mtx");
     ofile << num_row << " " << num_col << " " << r_cols.size() << "\n";

@@ -9,6 +9,12 @@
 
 // #define UPPER
 #define PARALLEL
+#define REORDER
+
+#ifdef REORDER
+#include "SuiteSparse/COLAMD/Include/colamd.h"
+#endif
+
 
 #ifdef UPPER
 
@@ -27,6 +33,27 @@
 #endif
 
 #endif
+
+
+void lower_mat_init_structure(const mattype num_rows,
+                    const indtype num_lines,
+                    indtype *&m_rows,
+                    mattype *&m_cols,
+                    const std::vector<std::vector<sparse_raw>> &matrix)
+{
+    m_rows = new indtype[num_rows + 1];
+    m_cols = new mattype[num_lines];
+
+    m_rows[0] = 0;
+    for (mattype l = 0; l < num_rows; l++)
+    {
+        for (mattype i = 0; i < matrix[l].size(); i++)
+        {
+            m_cols[m_rows[l] + i] = matrix[l][i].column;
+        }
+        m_rows[l + 1] = matrix[l].size() + m_rows[l];
+    }
+}
 
 int main()
 {
@@ -67,8 +94,29 @@ int main()
 
     std::cout << "File read in " << std::chrono::duration_cast<std::chrono::milliseconds>(end1 - beg).count() << " ms" << std::endl;
 
+    indtype *m_rows, *r_rows;
+    mattype *m_cols, *r_cols;
+    dattype *m_values, *r_values;
+
+
+#ifdef REORDER
+    int perm [num_row+1] ;		/* note the size is N+1 */
+    int stats [COLAMD_STATS] ;	/* for colamd and symamd output statistics */
+    lower_mat_init_structure(num_row, num_lines, m_rows, m_cols, matrix);
+    int ok = symamd (num_row, m_cols, m_rows, perm, (double *) NULL, stats, &calloc, &free) ;
+    symamd_report (stats) ;
+
+    if (!ok)
+    {
+	printf ("symamd error!\n") ;
+	exit (1) ;
+    }
+
+    delete [] m_rows;
+    delete [] m_cols;
     auto end11 = std::chrono::high_resolution_clock::now();
     std::cout << "Reorder in " << std::chrono::duration_cast<std::chrono::milliseconds>(end11 - end1).count() << " ms" << std::endl;
+#endif
 
     for (mattype l = 0; l < num_row; l++)
     {
@@ -143,10 +191,6 @@ int main()
 
     std::cout << "Tree with topological depth " << topological.size() << " for rows " << num_row
               << " created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end31 - end3).count() << "ms" << std::endl;
-
-    indtype *m_rows, *r_rows;
-    mattype *m_cols, *r_cols;
-    dattype *m_values, *r_values;
 
 #ifdef UPPER
     upper_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);

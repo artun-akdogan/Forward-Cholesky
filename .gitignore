@@ -1,3 +1,6 @@
 *.out
 .vscode
 Thesis/**
+SparseChol/
+SuiteSparse/
+*.mtx
