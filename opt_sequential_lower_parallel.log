@@ -20,3 +20,32 @@ Total iteration: 1570035113
 Operation completed for 114134033 nonzeros in 547160 ms
 File written in 23765 ms
 Program completed in 581476 ms
+
+// Reorder
+File read in 404 ms
+
+symamd version 2.8, Jun 1, 2012: OK.  
+symamd: number of dense or empty rows ignored:           0
+symamd: number of dense or empty columns ignored:        0
+symamd: number of garbage collections performed:         0
+Reorder in 152 ms
+Reverse graph created in 192 ms
+Finding fills
+Found fills in 251 ms
+Creating elimination tree (transitive reduction)
+Tree with topological depth 4098 for rows 52329 created in 6ms
+Reversing Graph
+Total nonzero: 5340052
+Normalized graph in 69 ms
+Initializing result matrix
+R Mat 5340052 5340052
+Graph created in 643 ms
+0 4098
+1000 4098
+2000 4098
+3000 4098
+4000 4098
+Total iteration: 54489452
+Operation completed for 5340052 nonzeros in 3560 ms
+File written in 1054 ms
+Program completed in 5663 ms
