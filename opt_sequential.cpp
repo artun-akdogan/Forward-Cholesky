@@ -4,17 +4,25 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <filesystem>
 
 #include "opt_sequential_common.h"
 
+#if BUILD & 1
 #define UPPER
+#endif
+
+#if BUILD & 2
 #define PARALLEL
+#endif
+
+#if BUILD & 4
 #define REORDER
+#endif
 
 #ifdef REORDER
 #include "SuiteSparse/COLAMD/Include/colamd.h"
 #endif
-
 
 #ifdef UPPER
 
@@ -34,12 +42,11 @@
 
 #endif
 
-
 void upper_mat_init_structure(const mattype num_rows,
-                    const indtype num_lines,
-                    indtype *&m_rows,
-                    mattype *&m_cols,
-                    const std::vector<std::vector<sparse_raw>> &matrix)
+                              const indtype num_lines,
+                              indtype *&m_rows,
+                              mattype *&m_cols,
+                              const std::vector<std::vector<sparse_raw>> &matrix)
 {
     std::vector<std::vector<sparse_raw>> rev_matrix(num_rows);
     for (mattype l = 0; l < num_rows; l++)
@@ -68,11 +75,11 @@ void upper_mat_init_structure(const mattype num_rows,
     }
 }
 
-int main()
+void operation_main(const char *matrix_name, bool save)
 {
     auto beg = std::chrono::high_resolution_clock::now();
 
-    std::ifstream file("ct20stif.mtx");
+    std::ifstream file(matrix_name);
     // std::ifstream file("bcsstk03.mtx");
     mattype num_row, num_col;
     indtype num_lines;
@@ -111,27 +118,27 @@ int main()
     mattype *m_cols, *r_cols;
     dattype *m_values, *r_values;
 
-
 #ifdef REORDER
-    int perm [num_row+1] ;		/* note the size is N+1 */
-    int stats [COLAMD_STATS] ;	/* for colamd and symamd output statistics */
+    int perm[num_row + 5];   /* note the size is N+1 */
+    int stats[COLAMD_STATS]; /* for colamd and symamd output statistics */
     upper_mat_init_structure(num_row, num_lines, m_rows, m_cols, matrix);
-    int ok = symamd (num_row, m_cols, m_rows, perm, (double *) NULL, stats, &calloc, &free) ;
-    symamd_report (stats) ;
+    int ok = symamd(num_row, m_cols, m_rows, perm, (double *)NULL, stats, &calloc, &free);
+    // symamd_report(stats);
 
     if (!ok)
     {
-	printf ("symamd error!\n") ;
-	exit (1) ;
+        printf("symamd error!\n");
+        exit(1);
     }
 
-    int iperm [num_row];
-    for(int i=0; i<num_row; i++){
-        iperm[perm[i]]=i;
+    int iperm[num_row];
+    for (int i = 0; i < num_row; i++)
+    {
+        iperm[perm[i]] = i;
     }
 
-    delete [] m_rows;
-    delete [] m_cols;
+    delete[] m_rows;
+    delete[] m_cols;
 
     std::vector<std::vector<sparse_raw>> reordered_matrix(num_row);
     for (mattype l = 0; l < num_row; l++)
@@ -165,7 +172,7 @@ int main()
             else if (matrix[l][i].column > l)
             {
                 std::cout << "wrong" << std::endl;
-                return 0;
+                return;
             }
             else
             {
@@ -173,7 +180,6 @@ int main()
             }
         }
     }
-    auto fit = rev_graph[0].begin();
 
     auto end2 = std::chrono::high_resolution_clock::now();
 
@@ -182,6 +188,12 @@ int main()
     std::cout << "Finding fills" << std::endl;
 
     indtype inserted = 0;
+    int __approx__nnz = 0;
+
+    for (mattype i = 0; i < num_row; i++)
+    {
+        __approx__nnz += rev_graph[i].size();
+    }
 
     for (mattype i = 0; i < num_row; i++)
     {
@@ -198,9 +210,19 @@ int main()
             if (*fit == i || *sit == i)
             {
                 std::cout << "wrong" << std::endl;
-                return 0;
+                return;
             }
-            rev_graph[*fit].insert(*sit);
+            if (rev_graph[*fit].insert(*sit).second)
+            {
+                __approx__nnz++;
+            }
+        }
+        if (__approx__nnz > MAX_NNZ)
+        {
+            std::ofstream logfile("result.log", std::ios::app);
+            logfile << matrix_name << " " << num_lines << " cannot computer more than " << MAX_NNZ << "\n";
+            std::cout << "More than " << MAX_NNZ << "nonzeros. Skipping..." << std::endl;
+            return;
         }
     }
 
@@ -266,18 +288,26 @@ int main()
 
     std::cout << "Operation completed for " << r_rows[num_row] << " nonzeros in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end41).count() << " ms" << std::endl;
 
-    std::ofstream ofile("result.mtx");
-    ofile << num_row << " " << num_col << " " << r_rows[num_row] << "\n";
+    std::cout << "Total time except disk io: " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end1).count() << " ms" << std::endl;
 
-    for (mattype i = 0; i < num_row - 1; i++)
+    std::ofstream logfile("result.log", std::ios::app);
+    logfile << matrix_name << " " << num_lines << " " << r_rows[num_row] << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end1).count() << "\n";
+
+    if (save)
     {
-        for (indtype l = r_rows[i]; l < r_rows[i + 1]; l++)
-        {
-            ofile << i + 1 << " " << r_cols[l] + 1 << " " << r_values[l] << "\n";
-        }
-    }
+        std::ofstream ofile("result.mtx");
+        ofile << num_row << " " << num_col << " " << r_rows[num_row] << "\n";
 
-    ofile.close();
+        for (mattype i = 0; i < num_row - 1; i++)
+        {
+            for (indtype l = r_rows[i]; l < r_rows[i + 1]; l++)
+            {
+                ofile << i + 1 << " " << r_cols[l] + 1 << " " << r_values[l] << "\n";
+            }
+        }
+
+        ofile.close();
+    }
 
     delete[] r_rows;
     delete[] r_cols;
@@ -285,9 +315,41 @@ int main()
 
     auto end6 = std::chrono::high_resolution_clock::now();
 
-    std::cout << "File written in " << std::chrono::duration_cast<std::chrono::milliseconds>(end6 - end5).count() << " ms" << std::endl;
-
+    if (save)
+    {
+        std::cout << "File written in " << std::chrono::duration_cast<std::chrono::milliseconds>(end6 - end5).count() << " ms" << std::endl;
+    }
     std::cout << "Program completed in " << std::chrono::duration_cast<std::chrono::milliseconds>(end6 - beg).count() << " ms" << std::endl;
+}
+
+int main()
+{
+    std::ofstream logfile("result.log", std::ios::app);
+    logfile <<
+#ifdef REORDER
+        "Reorder"
+#else
+        "Original"
+#endif
+            << " " <<
+#ifdef PARALLEL
+        "Parallel"
+#else
+        "Sequential"
+#endif
+            << " " <<
+#ifdef UPPER
+        "Upper"
+#else
+        "Lower"
+#endif
+            << std::endl;
+
+    for (const auto &entry : std::filesystem::directory_iterator("matrices"))
+    {
+        std::cout << "\n\nStart for " << entry.path().c_str() << std::endl;
+        operation_main(entry.path().c_str(), false);
+    }
 
     return 0;
 }

@@ -37,7 +37,6 @@ void lower_res_init(const mattype num_rows,
                     dattype *&r_values,
                     const std::vector<std::set<mattype>> &rev_graph)
 {
-
     auto end3 = std::chrono::high_resolution_clock::now();
     std::cout << "Reversing Graph" << std::endl;
     indtype tot_nonz = 0;

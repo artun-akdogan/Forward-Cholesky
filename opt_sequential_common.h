@@ -6,6 +6,8 @@
 
 #define COLMAX INT_MAX
 
+#define MAX_NNZ 400000000
+
 typedef int mattype;
 typedef int indtype;
 typedef double dattype;

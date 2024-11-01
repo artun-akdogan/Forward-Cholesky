@@ -20,7 +20,7 @@ library:
 dist:
 
 opt_sequential: opt_sequential.cpp library
-	$(C) -o opt_sequential opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm -fopenmp
+	$(C) $(CFLAGS) -o opt_sequential opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm -fopenmp
 
 #------------------------------------------------------------------------------
 # Remove all but the files in the original distribution
