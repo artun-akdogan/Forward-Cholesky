@@ -221,7 +221,8 @@ void operation_main(const char *matrix_name, bool save)
         {
             std::ofstream logfile("result.log", std::ios::app);
             logfile << matrix_name << " " << num_lines << " cannot computer more than " << MAX_NNZ << "\n";
-            std::cout << "More than " << MAX_NNZ << "nonzeros. Skipping..." << std::endl;
+            logfile.close();
+            std::cout << "More than " << MAX_NNZ << " non-zeros. Skipping..." << std::endl;
             return;
         }
     }
@@ -230,6 +231,7 @@ void operation_main(const char *matrix_name, bool save)
 
     std::cout << "Found fills in " << std::chrono::duration_cast<std::chrono::milliseconds>(end3 - end2).count() << " ms" << std::endl;
 
+#ifndef UPPER
     std::cout << "Creating elimination tree (transitive reduction)" << std::endl;
 
     std::vector<std::vector<mattype>> tree(num_row);
@@ -237,7 +239,10 @@ void operation_main(const char *matrix_name, bool save)
 
     for (mattype i = 0; i < num_row; i++)
     {
-        tree[*(rev_graph[i].begin())].push_back(i);
+        if (rev_graph[i].begin() != rev_graph[i].end())
+        {
+            tree[*(rev_graph[i].begin())].push_back(i);
+        }
     }
     mattype *topologicOrder = new mattype[num_row];
     topologicalSort(tree, topological, topologicOrder);
@@ -248,6 +253,7 @@ void operation_main(const char *matrix_name, bool save)
 
     std::cout << "Tree with topological depth " << topological.size() << " for rows " << num_row
               << " created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end31 - end3).count() << "ms" << std::endl;
+#endif
 
 #ifdef UPPER
     upper_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
@@ -275,14 +281,15 @@ void operation_main(const char *matrix_name, bool save)
     upper_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
 #else
     lower_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values, topological, topologicOrder);
+    delete[] topologicOrder;
 #endif
 
     std::cout << "Total iteration: " << total << std::endl;
+    total=0;
 
     delete[] m_rows;
     delete[] m_cols;
     delete[] m_values;
-    delete[] topologicOrder;
 
     auto end5 = std::chrono::high_resolution_clock::now();
 
@@ -292,6 +299,7 @@ void operation_main(const char *matrix_name, bool save)
 
     std::ofstream logfile("result.log", std::ios::app);
     logfile << matrix_name << " " << num_lines << " " << r_rows[num_row] << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end1).count() << "\n";
+    logfile.close();
 
     if (save)
     {

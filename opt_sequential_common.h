@@ -115,31 +115,8 @@ inline indtype col_find_custom_iter(const mattype *arr, const mattype target, in
 }
 
 #include <vector>
+#include <stack>
 
-// Function to perform DFS and topological sorting
-void topologicalSortUtil(int v, int d, const std::vector<std::vector<mattype>> &adj,
-                         std::vector<bool> &visited,
-                         std::vector<std::vector<mattype>> &Stack,
-                         mattype *topologicOrder)
-{
-    // Mark the current node as visited
-    visited[v] = true;
-
-    // Recur for all adjacent vertices
-    for (auto x : adj[v])
-    {
-        if (!visited[x])
-            topologicalSortUtil(x, d + 1, adj, visited, Stack, topologicOrder);
-    }
-
-    // Push current vertex to stack which stores the result
-    while (Stack.size() <= d)
-    {
-        Stack.push_back(std::vector<mattype>());
-    }
-    Stack[d].push_back(v);
-    topologicOrder[v] = d;
-}
 
 // Function to perform Topological Sort
 void topologicalSort(const std::vector<std::vector<mattype>> &tree,
@@ -147,19 +124,42 @@ void topologicalSort(const std::vector<std::vector<mattype>> &tree,
                      mattype *topologicOrder)
 {
     std::vector<bool> visited(tree.size(), false);
+    std::stack<std::pair<int, int>> visit_stack;
 
-    // Call the recursive helper function to store
-    // Topological Sort starting from all vertices one by
-    // one
-    for (int i = tree.size() - 1; i >= 0; i--)
+    for (int i = 0; i < tree.size(); i++)
     {
-        if (!visited[i])
-            topologicalSortUtil(i, 0, tree, visited, topological, topologicOrder);
+        if (!visited[i]){
+            visit_stack.push({i, 0});
+        }
     }
-    /*
-        for (int i = 0; i < topological.size(); i++){
-            std::sort(topological[i].begin(), topological[i].end());
-        }*/
+    while (!visit_stack.empty())
+    {
+        std::pair<int, int>__recur_val = visit_stack.top();
+        int v = __recur_val.first, d = __recur_val.second;
+        visit_stack.pop();
+        // Mark the current node as visited
+        if(visited[v]){
+            continue;
+        }
+        visited[v] = true;
+
+        // Recur for all adjacent vertices
+        for (auto x : tree[v])
+        {
+            if (!visited[x])
+            {
+                visit_stack.push({x, d + 1});
+            }
+        }
+
+        // Push current vertex to stack which stores the result
+        while (topological.size() <= d)
+        {
+            topological.push_back(std::vector<mattype>());
+        }
+        topological[d].push_back(v);
+        topologicOrder[v] = d;
+    }
 }
 
 #endif
