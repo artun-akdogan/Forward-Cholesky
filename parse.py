@@ -1,5 +1,10 @@
 import csv
 import matplotlib.pyplot as plt
+import matplotlib
+from itertools import cycle
+
+matplotlib.rcParams['figure.figsize'] = 26, 10
+cycol = cycle('bgrcmk')
 
 Results = {}
 with open("result.log") as log:
@@ -28,20 +33,40 @@ with open("result.log") as log:
             current = line
             Results[current] = []
 
-vals_for_ini = {}
-vals_for_res = {}
+cur_itr = 0
+fig, ax = plt.subplots(4, 2)
 for key, dict_arr in Results.items():
-    for dot in dict_arr:
-        if dot["total ms"] != -1:
-            vals_for_ini[dot["total ms"]] = dot["initial nnz"]
-            vals_for_res[dot["total ms"]] = dot["result nnz"]
+    if key[:7] == "Reorder":
+        vals_for_ini = {}
+        for dot in dict_arr:
+            if dot["total ms"] != -1:
+                vals_for_ini[dot["total ms"]] = dot["result nnz"]
 
-fig, ax = plt.subplots(1, 2)
-vals_for_ini = dict(sorted(vals_for_ini.items()))
-ax[0].plot(vals_for_ini.keys(), vals_for_ini.values(), label="initial nnz", color="green")
-vals_for_res = dict(sorted(vals_for_res.items()))
-ax[1].plot(vals_for_res.keys(), vals_for_res.values(), label="result nnz", color="blue")
-fig.legend()
+        vals_for_ini = dict(sorted(vals_for_ini.items()))
+        ax[cur_itr, 0].plot(vals_for_ini.keys(), vals_for_ini.values(),
+                         label="Result nnz "+key, color=next(cycol))
+        ax[cur_itr, 0].set_xticks(range(0, 3400001, 200000))
+        ax[cur_itr, 0].set_yticks(range(0, 400000001, 50000000))
+        cur_itr += 1
+
+cur_itr = 0
+for key, dict_arr in Results.items():
+    if key[:7] == "Reorder":
+        vals_for_ini = {}
+        for dot in dict_arr:
+            if dot["total ms"] != -1:
+                vals_for_ini[dot["total ms"]] = dot["initial nnz"]
+
+        vals_for_ini = dict(sorted(vals_for_ini.items()))
+        ax[cur_itr, 1].plot(vals_for_ini.keys(), vals_for_ini.values(),
+                         label="Initial nnz "+key, color=next(cycol))
+        ax[cur_itr, 1].set_xticks(range(0, 3400001, 200000))
+        ax[cur_itr, 1].set_yticks(range(0, 16000001, 2000000))
+        cur_itr += 1
+
+fig.tight_layout()
+fig.legend(loc='lower center', ncol=8)
+#plt.show()
 plt.savefig('result.png')
 
 
