@@ -9,15 +9,19 @@
 #include "opt_sequential_common.h"
 
 #if BUILD & 1
-#define UPPER
+#define REORDER
 #endif
 
 #if BUILD & 2
-#define PARALLEL
+#define UPPER
 #endif
 
 #if BUILD & 4
-#define REORDER
+#define PARALLEL
+#endif
+
+#if BUILD & 8
+#define CUDA
 #endif
 
 #ifdef REORDER
@@ -26,7 +30,9 @@
 
 #ifdef UPPER
 
-#ifdef PARALLEL
+#ifdef CUDA
+#include "opt_sequential_upper_cuda.h"
+#elif defined(PARALLEL)
 #include "opt_sequential_upper_parallel.h"
 #else
 #include "opt_sequential_upper.h"
@@ -34,7 +40,9 @@
 
 #else
 
-#ifdef PARALLEL
+#ifdef CUDA
+        static_assert(false, "Not implemented")
+#elif defined(PARALLEL)
 #include "opt_sequential_lower_parallel.h"
 #else
 #include "opt_sequential_lower.h"
@@ -144,8 +152,18 @@ void operation_main(const char *matrix_name, bool save)
     for (mattype l = 0; l < num_row; l++)
     {
         for (mattype i = 0; i < matrix[l].size(); i++)
-        {
-            reordered_matrix[iperm[matrix[l][i].row]].push_back({matrix[l][i].data, iperm[matrix[l][i].row], iperm[matrix[l][i].column]});
+        {/*
+            if(matrix[l][i].data<0.00000001 && matrix[l][i].data>-0.00000001){
+                std::cout << matrix[l][i].data;
+                exit(-1);
+            }*/
+            if(iperm[matrix[l][i].column]>iperm[matrix[l][i].row]){
+                //std::cout << "Here: " <<iperm[matrix[l][i].row] << " " << iperm[matrix[l][i].column] << std::endl;
+                reordered_matrix[iperm[matrix[l][i].column]].push_back({matrix[l][i].data, iperm[matrix[l][i].column], iperm[matrix[l][i].row]});
+            }else{
+                reordered_matrix[iperm[matrix[l][i].row]].push_back({matrix[l][i].data, iperm[matrix[l][i].row], iperm[matrix[l][i].column]});
+            }
+            
         }
     }
 
@@ -154,7 +172,43 @@ void operation_main(const char *matrix_name, bool save)
         std::sort(reordered_matrix[l].begin(), reordered_matrix[l].end(), [](const sparse_raw &lhs, const sparse_raw &rhs)
                   { return lhs.column < rhs.column; });
     }
+/*
+    for (mattype l = 0; l < num_row; l++)
+    {
+        for (mattype i = 1; i < matrix[l].size(); i++){
+            if (matrix[l][i-1].column>= matrix[l][i].column){
+                if (matrix[l][i-1].data!=matrix[l][i].data){
+                    std::cout << "MError " << matrix[l][i-1].data << " " <<matrix[l][i].data << " " << matrix[l][i-1].row << " " <<matrix[l][i-1].column << " "<< matrix[l][i].column << std::endl;
+                    exit(-1);
+                }else{
+                    std::cout << "MError equal data" << std::endl;
+                    exit(-1);
+                }
+            }
+        }
+    }
+    for (mattype l = 0; l < num_row; l++)
+    {
+        for (mattype i = 1; i < reordered_matrix[l].size(); i++){
+            if (reordered_matrix[l][i-1].column>= reordered_matrix[l][i].column){
+                if (reordered_matrix[l][i-1].data!=reordered_matrix[l][i].data){
+                    std::cout << "Error " << reordered_matrix[l][i-1].data << " " <<reordered_matrix[l][i].data << " " << reordered_matrix[l][i-1].row << " " <<reordered_matrix[l][i-1].column << " "<< reordered_matrix[l][i].column << std::endl;
+                    exit(-1);
+                }else{
+                    std::cout << "Error equal data" << std::endl;
+                    exit(-1);
+                }
+            }
+        }
+    }*/
     matrix = reordered_matrix;
+/*
+    for (mattype l = 0; l < num_row; l++)
+    {
+        for (mattype k=0; k<matrix[l].size(); k++){
+            std::cout << matrix[l][k].row +1 << " "<< matrix[l][k].column +1 << " "<< matrix[l][k].data << std::endl;
+        }
+    }*/
 
     auto end11 = std::chrono::high_resolution_clock::now();
     std::cout << "Reorder in " << std::chrono::duration_cast<std::chrono::milliseconds>(end11 - end1).count() << " ms" << std::endl;
@@ -330,7 +384,7 @@ void operation_main(const char *matrix_name, bool save)
     std::cout << "Program completed in " << std::chrono::duration_cast<std::chrono::milliseconds>(end6 - beg).count() << " ms" << std::endl;
 }
 
-int main()
+int main(int argc, char * argv[])
 {
     std::ofstream logfile("result.log", std::ios::app);
     logfile <<
@@ -340,7 +394,9 @@ int main()
         "Original"
 #endif
             << " " <<
-#ifdef PARALLEL
+#ifdef CUDA
+        "Cuda"
+#elif defined(PARALLEL)
         "Parallel"
 #else
         "Sequential"
@@ -352,6 +408,11 @@ int main()
         "Lower"
 #endif
             << std::endl;
+
+    if (argc==2){
+        operation_main(argv[1], true);
+        return 0;
+    }
 
     for (const auto &entry : std::filesystem::directory_iterator("matrices"))
     {
