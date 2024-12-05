@@ -74,8 +74,10 @@ void lower_res_init(const mattype num_rows,
         for (mattype i = 0; i < graph[l].size(); i++)
         {
             r_cols[r_rows[l] + i] = graph[l][i];
+            // std::cout << l << " " << graph[l][i] << std::endl;
         }
         r_cols[r_rows[l] + graph[l].size()] = l;
+        // std::cout << l << " " << l << std::endl;
         r_rows[l + 1] = r_rows[l] + graph[l].size() + 1;
     }
     std::cout << "R Mat " << r_rows[num_rows] << " " << tot_nonz << std::endl;
@@ -91,7 +93,7 @@ void lower_cholesky_calculate(const mattype num_rows,
                               const std::vector<std::vector<mattype>> &topological,
                               const mattype *topologicOrder)
 {
-    for (mattype cur_iter = 0; cur_iter < topological.size(); cur_iter++)
+    for (mattype cur_iter = topological.size() - 1; cur_iter >= 0; cur_iter--)
     {
         if (!(cur_iter % 1000))
         {

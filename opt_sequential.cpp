@@ -352,8 +352,8 @@ void operation_main(const char *matrix_name, bool save)
     delete[] topologicOrder;
 #endif
 
-    std::cout << "Total iteration: " << total << std::endl;
-    total = 0;
+    //std::cout << "Total iteration: " << total << std::endl;
+    //total = 0;
 
     delete[] m_rows;
     delete[] m_cols;

@@ -146,34 +146,24 @@ void upper_cholesky_calculate(const mattype num_rows,
         //  std::cout << "->ok " << res_diag << std::endl;
         // timer.start(2);
 #pragma omp parallel for
-        for (indtype __fi_ind = r_rows[row] + 1; __fi_ind < r_rows[row + 1]; __fi_ind++)
+        for (indtype fi_ind = r_rows[row] + 1; fi_ind < r_rows[row + 1]; fi_ind++)
         {
-            const indtype *__r_rows = r_rows;
-            const mattype *__r_cols = r_cols;
-            const mattype __row = row;
-            dattype *__r_values = r_values;
-            indtype __tgt_ind = __r_rows[__r_cols[__fi_ind]];
-            for (indtype __se_ind = __fi_ind; __se_ind < __r_rows[__row + 1]; __se_ind++)
+            indtype tgt_ind = r_rows[r_cols[fi_ind]];
+            for (indtype se_ind = fi_ind; se_ind < r_rows[row + 1]; se_ind++)
             {
                 // std::cout << "--->ok " << r_cols[fi_ind] << " " << r_cols[se_ind] << std::endl;
                 // tgt_ind = col_find(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
                 // tgt_ind = col_find_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
                 // tgt_ind = col_find_custom(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
                 // tgt_ind = col_find_custom_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
-                while (__r_rows[__r_cols[__fi_ind] + 1] > __tgt_ind)
+
+                tgt_ind = col_find_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
+                if (tgt_ind == COLMAX)
                 {
-                    if (__r_cols[__tgt_ind] == __r_cols[__se_ind])
-                    {
-                        break;
-                    }
-                    __tgt_ind++;
-                }
-                if (__tgt_ind == __r_rows[__r_cols[__fi_ind] + 1])
-                {
-                    std::cout << "Error: " << __row << std::endl;
+                    std::cout << "Error: " << row << std::endl;
                     exit(0);
                 }
-                __r_values[__tgt_ind] += __r_values[__fi_ind] * __r_values[__se_ind];
+                r_values[tgt_ind] += r_values[fi_ind] * r_values[se_ind];
             }
         }
         // timer.stop(2);
