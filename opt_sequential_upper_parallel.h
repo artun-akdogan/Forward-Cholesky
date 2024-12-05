@@ -116,8 +116,12 @@ void upper_cholesky_calculate(const mattype num_rows,
              std::cout << row << " " << r_cols[l] << " " << r_values[l] << std::endl;
          }
      }*/
+    // mattype perc_bit = (1<< (25-__builtin_clz(num_rows))) -1;
     for (mattype row = 0; row < num_rows; row++)
-    {
+    { /*
+         if((row & perc_bit) == perc_bit){
+             std::cout << "Progress: " << (row + 1) * 100 / num_rows << "%\r" << std::flush;
+         }*/
         if (!(row % 1000))
         {
             std::cout << row << " " << num_rows << std::endl;
@@ -127,6 +131,7 @@ void upper_cholesky_calculate(const mattype num_rows,
         indtype mat_ind = m_rows[row];
         r_values[res_ind] = std::sqrt(m_values[mat_ind] - r_values[res_ind]);
         dattype res_diag = r_values[res_ind]; // r_values[r_rows[row]]
+        // timer.start(1);
         for (res_ind++, mat_ind++; res_ind < r_rows[row + 1]; res_ind++)
         {
             dattype temp_mat = 0;
@@ -137,7 +142,9 @@ void upper_cholesky_calculate(const mattype num_rows,
             }
             r_values[res_ind] = (temp_mat - r_values[res_ind]) / res_diag;
         }
-        // std::cout << "->ok " << res_diag << std::endl;
+        // timer.stop(1);
+        //  std::cout << "->ok " << res_diag << std::endl;
+        // timer.start(2);
 #pragma omp parallel for
         for (indtype __fi_ind = r_rows[row] + 1; __fi_ind < r_rows[row + 1]; __fi_ind++)
         {
@@ -169,6 +176,7 @@ void upper_cholesky_calculate(const mattype num_rows,
                 __r_values[__tgt_ind] += __r_values[__fi_ind] * __r_values[__se_ind];
             }
         }
+        // timer.stop(2);
     }
 }
 

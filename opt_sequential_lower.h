@@ -5,6 +5,7 @@
 #include <chrono>
 #include <vector>
 #include <set>
+#include <cstring>
 
 #include "opt_sequential_common.h"
 
@@ -65,14 +66,18 @@ void lower_res_init(const mattype num_rows,
     r_cols = new mattype[tot_nonz];
     r_values = new dattype[tot_nonz];
 
+    std::memset(r_values, 0, tot_nonz * sizeof(dattype));
+
     r_rows[0] = 0;
     for (mattype l = 0; l < num_rows; l++)
     {
         for (mattype i = 0; i < graph[l].size(); i++)
         {
             r_cols[r_rows[l] + i] = graph[l][i];
+            //std::cout << l << " " << graph[l][i] << std::endl;
         }
         r_cols[r_rows[l] + graph[l].size()] = l;
+        //std::cout << l << " " << l << std::endl;
         r_rows[l + 1] = r_rows[l] + graph[l].size() + 1;
     }
     std::cout << "R Mat " << r_rows[num_rows] << " " << tot_nonz << std::endl;
@@ -129,10 +134,12 @@ void lower_cholesky_calculate(const mattype num_rows,
             }
             // std::cout << "ok" << std::endl;
             indtype res_it = col_find(r_cols, r_cols[fi], r_rows[r_cols[fi]], r_rows[r_cols[fi] + 1]);
-            if (res_it != COLMAX)
+            if (res_it == COLMAX)
             {
-                res_val = r_values[res_it];
+                std::cout << "RError: " << row << std::endl;
+                exit(0);
             }
+            res_val = r_values[res_it];
             if ((mat_val - tot) / res_val != 0)
             {
                 r_values[fi] = (mat_val - tot) / res_val;

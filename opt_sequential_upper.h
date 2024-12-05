@@ -87,9 +87,11 @@ void upper_res_init(const mattype num_rows,
     for (mattype l = 0; l < num_rows; l++)
     {
         r_cols[r_rows[l]] = l;
+        //std::cout << l << " " << l << std::endl;
         for (mattype i = 0; i < graph[l].size(); i++)
         {
             r_cols[r_rows[l] + i + 1] = graph[l][i];
+            //std::cout << l << " " << graph[l][i] << std::endl;
             // std::cout << l << " " << r_cols[r_rows[l] + i] <<  std::endl;
         }
         r_rows[l + 1] = r_rows[l] + graph[l].size() + 1;
@@ -126,6 +128,7 @@ void upper_cholesky_calculate(const mattype num_rows,
         indtype mat_ind = m_rows[row];
         r_values[res_ind] = std::sqrt(m_values[mat_ind] - r_values[res_ind]);
         dattype res_diag = r_values[res_ind]; // r_values[r_rows[row]]
+        timer.start(1);
         for (res_ind++, mat_ind++; res_ind < r_rows[row + 1]; res_ind++)
         {
             dattype temp_mat = 0;
@@ -136,6 +139,10 @@ void upper_cholesky_calculate(const mattype num_rows,
             }
             r_values[res_ind] = (temp_mat - r_values[res_ind]) / res_diag;
         }
+
+        timer.stop(1);
+
+        timer.start(2);
         // std::cout << "->ok " << res_diag << std::endl;
         for (indtype fi_ind = r_rows[row] + 1; fi_ind < r_rows[row + 1]; fi_ind++)
         {
@@ -144,7 +151,11 @@ void upper_cholesky_calculate(const mattype num_rows,
             {
                 // std::cout << "--->ok " << r_cols[fi_ind] << " " << r_cols[se_ind] << std::endl;
                 // tgt_ind = col_find(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
+
+                //timer.start(4);
+                //timer.start(3);
                 tgt_ind = col_find_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
+                //timer.stop(3);
                 // tgt_ind = col_find_custom(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
                 // tgt_ind = col_find_custom_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
                 if (tgt_ind == COLMAX)
@@ -153,8 +164,10 @@ void upper_cholesky_calculate(const mattype num_rows,
                     exit(0);
                 }
                 r_values[tgt_ind] += r_values[fi_ind] * r_values[se_ind];
+                //timer.stop(4);
             }
         }
+        timer.stop(2);
     }
 }
 

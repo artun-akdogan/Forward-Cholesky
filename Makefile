@@ -6,7 +6,7 @@ default: opt_sequential
 
 include SuiteSparse/SuiteSparse_config/SuiteSparse_config.mk
 
-I = -ISuiteSparse/COLAMD/Include -ISuiteSparse/SuiteSparse_config
+I = -ISuiteSparse/COLAMD/Include -ISuiteSparse/SuiteSparse_config -Ilibthrust -I/usr/local/cuda/include
 
 C = $(CXX) $(CF) $(I)
 
@@ -20,7 +20,7 @@ library:
 dist:
 
 opt_sequential: opt_sequential.cpp library
-	$(C) $(CFLAGS) -o opt_sequential opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm -fopenmp
+	$(C) $(CFLAGS) -DBUILD=$(i) -o opt_sequential opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm -fopenmp 
 
 #------------------------------------------------------------------------------
 # Remove all but the files in the original distribution
