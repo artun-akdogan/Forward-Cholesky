@@ -29,6 +29,7 @@
 #endif
 
 #ifdef UPPER
+#include "opt_sequential_upper_common.h"
 
 #ifdef CUDA
 #include "opt_sequential_upper_cuda.h"
@@ -39,6 +40,7 @@
 #endif
 
 #else
+#include "opt_sequential_lower_common.h"
 
 #ifdef CUDA
 static_assert(false, "Not implemented")
