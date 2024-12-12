@@ -13,11 +13,6 @@ typedef int indtype;
 typedef double dattype;
 
 
-#ifdef __NVCC__
-#define INLINE __device__ inline
-#else
-#define INLINE inline
-
 class Timer
 {
 private:
@@ -27,7 +22,7 @@ private:
     int num_blocks;                                       // Total number of blocks
 
 public:
-    Timer(int num_blocks) : num_blocks(num_blocks)
+    Timer(int num_blocks=5) : num_blocks(num_blocks)
     {
         durations.resize(num_blocks, std::chrono::duration<double>::zero());
         start_times.resize(num_blocks);
@@ -60,7 +55,15 @@ public:
         // Include "Total" as a separate summary
         std::cout << "  Total: " << durations[0].count() << " seconds (100.00%)\n";
     }
-} timer(5);
+};
+
+extern Timer timer;
+
+
+#ifdef CUDA
+#define INLINE __device__ inline
+#else
+#define INLINE inline
 
 
 

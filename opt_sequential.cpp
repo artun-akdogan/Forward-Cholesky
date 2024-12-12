@@ -8,6 +8,9 @@
 
 #include "opt_sequential_common.h"
 
+
+Timer timer(5);
+
 #if BUILD & 1
 #define REORDER
 #endif
@@ -438,7 +441,7 @@ int main(int argc, char *argv[])
     if (argc == 2)
     {
         std::cout << "\n\nStart for " << argv[1] << std::endl;
-        operation_main(argv[1], false);
+        operation_main(argv[1], true);
         return 0;
     }
 
