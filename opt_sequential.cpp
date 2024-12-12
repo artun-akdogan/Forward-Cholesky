@@ -88,7 +88,7 @@ void upper_mat_init_structure(const mattype num_rows,
 void operation_main(const char *matrix_name, bool save)
 {
     auto beg = std::chrono::high_resolution_clock::now();
-    timer.start(0);
+    //timer.start(0);
 
     std::ifstream file(matrix_name);
     // std::ifstream file("bcsstk03.mtx");
@@ -154,7 +154,7 @@ void operation_main(const char *matrix_name, bool save)
 
         for (mattype i = 0; i < num_row; i++)
         {
-            ofile << iperm[i] << "\n";
+            ofile << perm[i]+1 << "\n";
         }
         ofile.close();
     }
@@ -228,6 +228,8 @@ void operation_main(const char *matrix_name, bool save)
 
     auto end11 = std::chrono::high_resolution_clock::now();
     std::cout << "Reorder in " << std::chrono::duration_cast<std::chrono::milliseconds>(end11 - end1).count() << " ms" << std::endl;
+#else
+    auto end11 = std::chrono::high_resolution_clock::now();
 #endif
 
     for (mattype l = 0; l < num_row; l++)
@@ -293,7 +295,7 @@ void operation_main(const char *matrix_name, bool save)
             logfile << matrix_name << " " << num_lines << " cannot computer more than " << MAX_NNZ << "\n";
             logfile.close();
             std::cout << "More than " << MAX_NNZ << " non-zeros. Skipping..." << std::endl;
-            return;
+            exit(1);
         }
     }
 
@@ -365,7 +367,7 @@ void operation_main(const char *matrix_name, bool save)
 
     std::cout << "Operation completed for " << r_rows[num_row] << " nonzeros in " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end41).count() << " ms" << std::endl;
 
-    std::cout << "Total time except disk io: " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end1).count() << " ms" << std::endl;
+    std::cout << "Total time except disk io: " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end11).count() << " ms" << std::endl;
 
     std::ofstream logfile("result.log", std::ios::app);
     logfile << matrix_name << " " << num_lines << " " << r_rows[num_row] << " " << std::chrono::duration_cast<std::chrono::milliseconds>(end5 - end1).count() << "\n";
@@ -404,14 +406,14 @@ void operation_main(const char *matrix_name, bool save)
     }
     std::cout << "Program completed in " << std::chrono::duration_cast<std::chrono::milliseconds>(end6 - beg).count() << " ms" << std::endl;
 
-    timer.stop(0);
-    timer.print_summary();
+    //timer.stop(0);
+    //timer.print_summary();
 }
 
 int main(int argc, char *argv[])
 {
-    std::ofstream logfile("result.log", std::ios::app);
-    logfile <<
+    //std::ofstream logfile("result.log", std::ios::app);
+    std::cout <<
 #ifdef REORDER
         "Reorder"
 #else
@@ -435,7 +437,8 @@ int main(int argc, char *argv[])
 
     if (argc == 2)
     {
-        operation_main(argv[1], true);
+        std::cout << "\n\nStart for " << argv[1] << std::endl;
+        operation_main(argv[1], false);
         return 0;
     }
 

@@ -20,10 +20,10 @@ void lower_cholesky_calculate(const mattype num_rows,
     for (mattype row = 0; row < num_rows; row++)
     {
         // std::cout << row << " " << num_rows << std::endl;
-        if (!(row % 1000))
+        /*if (!(row % 1000))
         {
             std::cout << row << " " << num_rows << std::endl;
-        }
+        }*/
         for (indtype fi = r_rows[row]; fi < r_rows[row + 1] - 1; fi++)
         {
             dattype tot = 0, mat_val = 0, res_val = 0;

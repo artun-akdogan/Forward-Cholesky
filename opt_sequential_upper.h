@@ -26,10 +26,10 @@ void upper_cholesky_calculate(const mattype num_rows,
      }*/
     for (mattype row = 0; row < num_rows; row++)
     {
-        if (!(row % 1000))
+        /*if (!(row % 1000))
         {
             std::cout << row << " " << num_rows << std::endl;
-        }
+        }*/
         // std::cout << "->ok " << row << std::endl;
         indtype res_ind = r_rows[row];
         indtype mat_ind = m_rows[row];
@@ -54,6 +54,7 @@ void upper_cholesky_calculate(const mattype num_rows,
         for (indtype fi_ind = r_rows[row] + 1; fi_ind < r_rows[row + 1]; fi_ind++)
         {
             indtype tgt_ind = r_rows[r_cols[fi_ind]];
+            indtype end_tgt_ind = r_rows[r_cols[fi_ind] + 1];
             for (indtype se_ind = fi_ind; se_ind < r_rows[row + 1]; se_ind++)
             {
                 // std::cout << "--->ok " << r_cols[fi_ind] << " " << r_cols[se_ind] << std::endl;
@@ -62,14 +63,14 @@ void upper_cholesky_calculate(const mattype num_rows,
                 // timer.start(4);
                 // timer.start(3);
                 tgt_ind = col_find_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
-                // timer.stop(3);
-                //  tgt_ind = col_find_custom(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
-                //  tgt_ind = col_find_custom_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
                 if (tgt_ind == COLMAX)
                 {
                     std::cout << "Error: " << row << std::endl;
                     exit(0);
                 }
+                // timer.stop(3);
+                //  tgt_ind = col_find_custom(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
+                //  tgt_ind = col_find_custom_iter(r_cols, r_cols[se_ind], tgt_ind, r_rows[r_cols[fi_ind] + 1]);
                 r_values[tgt_ind] += r_values[fi_ind] * r_values[se_ind];
                 // timer.stop(4);
             }

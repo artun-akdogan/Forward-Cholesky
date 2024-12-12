@@ -19,10 +19,10 @@ void lower_cholesky_calculate(const mattype num_rows,
 {
     for (mattype cur_iter = topological.size() - 1; cur_iter >= 0; cur_iter--)
     {
-        if (!(cur_iter % 1000))
+        /*if (!(cur_iter % 1000))
         {
             std::cout << cur_iter << " " << topological.size() << std::endl;
-        } /*
+        }*/ /*
          for (mattype row_ind = 0; row_ind < topological[cur_iter].size(); row_ind++)
          {
              std::cout << topological[cur_iter][row_ind] << " ";

@@ -19,16 +19,42 @@
 %display("Reorder")
 %perm = symamd(sparse_mat); % Find permutation for sparsity
 %reordered_mat = sparse_mat(perm, perm); % Reorder the matrix
-lower_mat = mmread("matrices/bcsstk03.mtx");
+
+
+% octave --eval 'test_case("matrices/ct20stif.mtx", 1, false)'
+
+function test_case(matrix, reorder, write)
+reordered_mat = mmread(matrix);
+
+if (bitand(reorder, 1))
+    fileID = fopen('order.mtx', 'r');
+    
+    % Read the newline-separated values into a vector
+    vec = fscanf(fileID, '%d').';
+    
+    % Close the file
+    fclose(fileID);
+    %sparse_mat = lower_mat + lower_mat' - diag(diag(lower_mat));
+    sparse_mat = triu(reordered_mat.',1) + tril(reordered_mat) ;
+    
+    
+    %display("Reorder")
+    %perm = symamd2(sparse_mat);
+    %[~, iperm] = sort(perm);
+    reordered_mat = sparse_mat(vec, vec);
+end
+
 tic
-
 display("Calculate")
-mat = chol(lower_mat, 'lower');
-
-display(nnz(mat))
+mat = chol(reordered_mat, 'lower');
 toc
 
-mmwrite("result_mat.mtx", mat, '', 'real', 6);
+if(write)
+    mmwrite("result_mat.mtx", mat, '', 'real', 6);
+end
+
+return;
+end
 
 %fid=fopen("result.mtx");
 %e=textscan(fid,'%f %f %f','CommentStyle','%');
@@ -42,21 +68,21 @@ mmwrite("result_mat.mtx", mat, '', 'real', 6);
 %display(nnz(mat));
 
 %tic
-%fid=fopen("result.mtx");
-%e=textscan(fid,'%f %f %f','CommentStyle','%');
-%fclose(fid);
-%out = cell2mat(e);
-%lower_mat = sparse(out(2:end, 1), out(2:end, 2), out(2:end, 3), out(1, 1), out(1, 2), out(1, 3));
+fid=fopen("result.mtx");
+e=textscan(fid,'%f %f %f','CommentStyle','%');
+fclose(fid);
+out = cell2mat(e);
+lower_mat = sparse(out(2:end, 1), out(2:end, 2), out(2:end, 3), out(1, 1), out(1, 2), out(1, 3));
 
-%display(nnz(lower_mat));
-%display(nnz(mat));
+display(nnz(lower_mat));
+display(nnz(mat));
 
 %display(max(abs(lower_mat - mat),[],"all","linear"));
 %display(max(abs(lower_mat - mat),[],"all")/mean(mat,"all"));
 %errors =abs(lower_mat - mat)/max(lower_mat,mat);
 %errors =abs(lower_mat - mat)/mat;
-%subplot(1, 2, 1), spy(mat), title('Program');
-%subplot(1, 2, 2), spy(lower_mat), title('Mine');
+subplot(1, 2, 1), spy(mat), title('Program');
+subplot(1, 2, 2), spy(lower_mat), title('Mine');
 %lower_mat = lower_mat(1:100000);
 %mat = mat(1:100000);
 %pause();

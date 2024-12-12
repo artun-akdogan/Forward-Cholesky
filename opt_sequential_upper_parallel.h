@@ -31,10 +31,10 @@ void upper_cholesky_calculate(const mattype num_rows,
          if((row & perc_bit) == perc_bit){
              std::cout << "Progress: " << (row + 1) * 100 / num_rows << "%\r" << std::flush;
          }*/
-        if (!(row % 1000))
+        /*if (!(row % 1000))
         {
             std::cout << row << " " << num_rows << std::endl;
-        }
+        }*/
         // std::cout << "->ok " << row << std::endl;
         indtype res_ind = r_rows[row];
         indtype mat_ind = m_rows[row];
@@ -54,10 +54,11 @@ void upper_cholesky_calculate(const mattype num_rows,
         // timer.stop(1);
         //  std::cout << "->ok " << res_diag << std::endl;
         // timer.start(2);
-#pragma omp parallel for
+#pragma omp parallel for firstprivate(r_rows, r_cols, row)
         for (indtype fi_ind = r_rows[row] + 1; fi_ind < r_rows[row + 1]; fi_ind++)
         {
             indtype tgt_ind = r_rows[r_cols[fi_ind]];
+            indtype end_tgt_ind = r_rows[r_cols[fi_ind] + 1];
             for (indtype se_ind = fi_ind; se_ind < r_rows[row + 1]; se_ind++)
             {
                 // std::cout << "--->ok " << r_cols[fi_ind] << " " << r_cols[se_ind] << std::endl;

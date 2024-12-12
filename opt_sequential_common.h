@@ -12,14 +12,11 @@ typedef int mattype;
 typedef int indtype;
 typedef double dattype;
 
-struct sparse_raw
-{
-    dattype data;
-    mattype row;
-    mattype column;
-};
 
-// long long total = 0;
+#ifdef __NVCC__
+#define INLINE __device__ inline
+#else
+#define INLINE inline
 
 class Timer
 {
@@ -65,98 +62,7 @@ public:
     }
 } timer(5);
 
-inline indtype col_find(const mattype *arr, const mattype target, indtype start, indtype end)
-{
-    while (end > start)
-    {
-        // total++;
-        indtype mid = (start + end) / 2;
 
-        if (arr[mid] > target)
-        {
-            end = mid;
-        }
-        else if (arr[mid] < target)
-        {
-            start = mid + 1;
-        }
-        else
-        {
-            return mid;
-        }
-    }
-    return COLMAX;
-}
-
-inline indtype col_find_iter(const mattype *arr, const mattype target, indtype start, indtype end)
-{
-    while (end > start)
-    {
-        // total++;
-        if (arr[start] == target)
-        {
-            return start;
-        }
-        start++;
-    }
-    return COLMAX;
-}
-
-inline indtype col_find_custom(const mattype *arr, const mattype target, indtype start, indtype end)
-{
-    indtype iter = 1;
-    while (end > start)
-    {
-        // total++;
-        indtype mid = start + iter - 1;
-
-        if (mid >= end)
-        {
-            return col_find(arr, target, start, end);
-        }
-        if (arr[mid] > target)
-        {
-            return col_find(arr, target, start, mid);
-        }
-        if (arr[mid] == target)
-        {
-            return mid;
-        }
-        start = mid + 1;
-        iter <<= 1;
-    }
-    return COLMAX;
-}
-
-inline indtype col_find_custom_iter(const mattype *arr, const mattype target, indtype start, indtype end)
-{
-    indtype iter = 1;
-    while (end > start)
-    {
-        // total++;
-        indtype mid = start + iter - 1;
-
-        if (mid >= end)
-        {
-            iter = 1;
-        }
-        else if (arr[mid] > target)
-        {
-            end = mid;
-            iter = 1;
-        }
-        else if (arr[mid] == target)
-        {
-            return mid;
-        }
-        else
-        {
-            start = mid + 1;
-            iter <<= 1;
-        }
-    }
-    return COLMAX;
-}
 
 #include <vector>
 #include <stack>
@@ -205,6 +111,111 @@ void topologicalSort(const std::vector<std::vector<mattype>> &tree,
         topological[d].push_back(v);
         topologicOrder[v] = d;
     }
+}
+
+#endif
+
+struct sparse_raw
+{
+    dattype data;
+    mattype row;
+    mattype column;
+};
+
+// long long total = 0;
+
+
+INLINE indtype col_find(const mattype *arr, const mattype target, indtype start, indtype end)
+{
+    while (end > start)
+    {
+        // total++;
+        indtype mid = (start + end) / 2;
+
+        if (arr[mid] > target)
+        {
+            end = mid;
+        }
+        else if (arr[mid] < target)
+        {
+            start = mid + 1;
+        }
+        else
+        {
+            return mid;
+        }
+    }
+    return COLMAX;
+}
+
+INLINE indtype col_find_iter(const mattype *arr, const mattype target, indtype start, const indtype end)
+{
+    while (end > start)
+    {
+        // total++;
+        if (arr[start] == target)
+        {
+            return start;
+        }
+        start++;
+    }
+    return COLMAX;
+}
+
+INLINE indtype col_find_custom(const mattype *arr, const mattype target, indtype start, indtype end)
+{
+    indtype iter = 1;
+    while (end > start)
+    {
+        // total++;
+        indtype mid = start + iter - 1;
+
+        if (mid >= end)
+        {
+            return col_find(arr, target, start, end);
+        }
+        if (arr[mid] > target)
+        {
+            return col_find(arr, target, start, mid);
+        }
+        if (arr[mid] == target)
+        {
+            return mid;
+        }
+        start = mid + 1;
+        iter <<= 1;
+    }
+    return COLMAX;
+}
+
+INLINE indtype col_find_custom_iter(const mattype *arr, const mattype target, indtype start, indtype end)
+{
+    indtype iter = 1;
+    while (end > start)
+    {
+        // total++;
+        indtype mid = start + iter - 1;
+
+        if (mid >= end)
+        {
+            iter = 1;
+        }
+        else if (arr[mid] > target)
+        {
+            end = mid;
+            iter = 1;
+        }
+        else if (arr[mid] == target)
+        {
+            return mid;
+        }
+        else
+        {
+            start = mid + 1;
+            iter <<= 1;
+        }
+    }
+    return COLMAX;
 }
 
 #endif
