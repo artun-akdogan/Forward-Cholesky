@@ -20,14 +20,14 @@ library:
 dist:
 
 opt_sequential: opt_sequential.cpp library
-	$(C) $(CFLAGS) -DBUILD=$(i) -o opt_sequential opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm -fopenmp
+	$(C) $(CFLAGS) -O3 -DBUILD=$(i) -o opt_sequential opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm -fopenmp
 
 opt_sequential_upper_cuda.o: opt_sequential_upper_cuda.cu
-	nvcc -c opt_sequential_upper_cuda.cu -o opt_sequential_upper_cuda.o
+	nvcc -c opt_sequential_upper_cuda.cu -o opt_sequential_upper_cuda.o --expt-relaxed-constexpr
 
 opt_sequential_cuda: opt_sequential_upper_cuda.o opt_sequential.cpp library
-	$(C) $(CFLAGS) -DBUILD=$(i) -o opt_sequential.o -c opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm
-	$(C) opt_sequential_upper_cuda.o opt_sequential.o -o opt_sequential -L/usr/local/cuda/lib64 -lcudart
+	$(C) $(CFLAGS) -O3 -DBUILD=$(i) -o opt_sequential.o -c opt_sequential.cpp -lm
+	$(C) -O3 opt_sequential_upper_cuda.o opt_sequential.o  SuiteSparse/COLAMD/Lib/libcolamd.a  -o opt_sequential -L/usr/local/cuda/lib64 -lcudart
 
 
 #------------------------------------------------------------------------------

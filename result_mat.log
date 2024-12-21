@@ -1,0 +1,128 @@
+matrices/1138_bus.mtx
+Original
+Calculate
+Elapsed time is 0.065559 seconds.
+-----------
+
+matrices/apache2.mtx
+Original
+Calculate
+Elapsed time is 50.973345 seconds.
+-----------
+
+matrices/bcsstk03.mtx
+Original
+Calculate
+Elapsed time is 0.006875 seconds.
+-----------
+
+matrices/cond-mat.mtx
+Original
+Calculate
+-----------
+
+matrices/consph.mtx
+Original
+Calculate
+Elapsed time is 25.498874 seconds.
+-----------
+
+matrices/ct20stif.mtx
+Original
+Calculate
+Elapsed time is 5.751705 seconds.
+-----------
+
+matrices/nd24k.mtx
+Original
+Calculate
+Elapsed time is 264.333061 seconds.
+-----------
+
+matrices/offshore.mtx
+Original
+Calculate
+-----------
+
+matrices/parabolic_fem.mtx
+Original
+Calculate
+-----------
+
+matrices/s3dkq4m2.mtx
+Original
+Calculate
+Elapsed time is 1.041919 seconds.
+-----------
+
+matrices/s3rmt3m3.mtx
+Original
+Calculate
+Elapsed time is 0.182388 seconds.
+-----------
+
+matrices/1138_bus.mtx
+Reorder
+Calculate
+Elapsed time is 0.004030 seconds.
+-----------
+
+matrices/apache2.mtx
+Reorder
+Calculate
+Elapsed time is 4.799050 seconds.
+-----------
+
+matrices/bcsstk03.mtx
+Reorder
+Calculate
+Elapsed time is 0.003650 seconds.
+-----------
+
+matrices/cond-mat.mtx
+Reorder
+Calculate
+-----------
+
+matrices/consph.mtx
+Reorder
+Calculate
+Elapsed time is 3.718594 seconds.
+-----------
+
+matrices/ct20stif.mtx
+Reorder
+Calculate
+Elapsed time is 0.291778 seconds.
+-----------
+
+matrices/nd24k.mtx
+Reorder
+Calculate
+Elapsed time is 33.183415 seconds.
+-----------
+
+matrices/offshore.mtx
+Reorder
+Calculate
+Elapsed time is 4.844400 seconds.
+-----------
+
+matrices/parabolic_fem.mtx
+Reorder
+Calculate
+Elapsed time is 1.304517 seconds.
+-----------
+
+matrices/s3dkq4m2.mtx
+Reorder
+Calculate
+Elapsed time is 0.389903 seconds.
+-----------
+
+matrices/s3rmt3m3.mtx
+Reorder
+Calculate
+Elapsed time is 0.121628 seconds.
+-----------
+

@@ -24,10 +24,12 @@
 % octave --eval 'test_case("matrices/ct20stif.mtx", 1, false)'
 
 function test_case(matrix, reorder, write)
+disp(matrix)
 reordered_mat = mmread(matrix);
 
 if (bitand(reorder, 1))
-    fileID = fopen('order.mtx', 'r');
+    disp("Reorder")
+    fileID = fopen('/tmp/order.mtx', 'r');
     
     % Read the newline-separated values into a vector
     vec = fscanf(fileID, '%d').';
@@ -42,16 +44,33 @@ if (bitand(reorder, 1))
     %perm = symamd2(sparse_mat);
     %[~, iperm] = sort(perm);
     reordered_mat = sparse_mat(vec, vec);
+else
+    disp("Original")
 end
 
 tic
-display("Calculate")
+disp("Calculate")
 mat = chol(reordered_mat, 'lower');
 toc
 
 if(write)
     mmwrite("result_mat.mtx", mat, '', 'real', 6);
 end
+
+disp("Begin nnz");
+display(nnz(reordered_mat));
+disp("Result nnz")
+display(nnz(mat));
+
+try
+    comp = mmread("/tmp/result.mtx");
+
+    fro_norm = norm(comp - mat, 'fro');
+    disp("Frobenius Scalar Product");
+    disp(fro_norm);
+catch ME
+    disp("Couldn't find other matrix");
+end 
 
 return;
 end
@@ -68,21 +87,21 @@ end
 %display(nnz(mat));
 
 %tic
-fid=fopen("result.mtx");
-e=textscan(fid,'%f %f %f','CommentStyle','%');
-fclose(fid);
-out = cell2mat(e);
-lower_mat = sparse(out(2:end, 1), out(2:end, 2), out(2:end, 3), out(1, 1), out(1, 2), out(1, 3));
+%fid=fopen("result.mtx");
+%e=textscan(fid,'%f %f %f','CommentStyle','%');
+%fclose(fid);
+%out = cell2mat(e);
+%lower_mat = sparse(out(2:end, 1), out(2:end, 2), out(2:end, 3), out(1, 1), out(1, 2), out(1, 3));
 
-display(nnz(lower_mat));
-display(nnz(mat));
+%display(nnz(lower_mat));
+%display(nnz(mat));
 
 %display(max(abs(lower_mat - mat),[],"all","linear"));
 %display(max(abs(lower_mat - mat),[],"all")/mean(mat,"all"));
 %errors =abs(lower_mat - mat)/max(lower_mat,mat);
 %errors =abs(lower_mat - mat)/mat;
-subplot(1, 2, 1), spy(mat), title('Program');
-subplot(1, 2, 2), spy(lower_mat), title('Mine');
+%subplot(1, 2, 1), spy(mat), title('Program');
+%subplot(1, 2, 2), spy(lower_mat), title('Mine');
 %lower_mat = lower_mat(1:100000);
 %mat = mat(1:100000);
 %pause();

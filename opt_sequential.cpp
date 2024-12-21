@@ -8,7 +8,6 @@
 
 #include "opt_sequential_common.h"
 
-
 Timer timer(5);
 
 #if BUILD & 1
@@ -55,6 +54,17 @@ static_assert(false, "Not implemented")
 
 #endif
 
+const char * rsplit(const char * start, const char delim){
+    const char *newstart = start;
+    while((*start)!='\0'){
+        if((*start)==delim){
+            newstart = start;
+        }
+        start++;
+    }
+    return newstart;
+}
+
 void upper_mat_init_structure(const mattype num_rows,
                               const indtype num_lines,
                               indtype *&m_rows,
@@ -91,7 +101,7 @@ void upper_mat_init_structure(const mattype num_rows,
 void operation_main(const char *matrix_name, bool save)
 {
     auto beg = std::chrono::high_resolution_clock::now();
-    //timer.start(0);
+    // timer.start(0);
 
     std::ifstream file(matrix_name);
     // std::ifstream file("bcsstk03.mtx");
@@ -151,16 +161,21 @@ void operation_main(const char *matrix_name, bool save)
         iperm[perm[i]] = i;
     }
 
-    if (save)
-    {
-        std::ofstream ofile("order.mtx");
+    // if (save){
+    #ifndef UPPER
+    #ifndef PARALLEL
+    #ifndef CUDA
+    std::ofstream ofile("/tmp/order.mtx");
 
-        for (mattype i = 0; i < num_row; i++)
-        {
-            ofile << perm[i]+1 << "\n";
-        }
-        ofile.close();
+    for (mattype i = 0; i < num_row; i++)
+    {
+        ofile << perm[i] + 1 << "\n";
     }
+    ofile.close();
+    #endif
+    #endif
+    #endif
+    //}
 
     delete[] m_rows;
     delete[] m_cols;
@@ -291,15 +306,15 @@ void operation_main(const char *matrix_name, bool save)
             {
                 __approx__nnz++;
             }
-        }
-        if (__approx__nnz > MAX_NNZ)
-        {
-            std::ofstream logfile("result.log", std::ios::app);
-            logfile << matrix_name << " " << num_lines << " cannot computer more than " << MAX_NNZ << "\n";
-            logfile.close();
-            std::cout << "More than " << MAX_NNZ << " non-zeros. Skipping..." << std::endl;
-            exit(1);
-        }
+        } /*
+         if (__approx__nnz > MAX_NNZ)
+         {
+             std::ofstream logfile("result.log", std::ios::app);
+             logfile << matrix_name << " " << num_lines << " cannot computer more than " << MAX_NNZ << "\n";
+             logfile.close();
+             std::cout << "More than " << MAX_NNZ << " non-zeros. Skipping..." << std::endl;
+             exit(1);
+         }*/
     }
 
     auto end3 = std::chrono::high_resolution_clock::now();
@@ -359,8 +374,8 @@ void operation_main(const char *matrix_name, bool save)
     delete[] topologicOrder;
 #endif
 
-    //std::cout << "Total iteration: " << total << std::endl;
-    //total = 0;
+    // std::cout << "Total iteration: " << total << std::endl;
+    // total = 0;
 
     delete[] m_rows;
     delete[] m_cols;
@@ -378,7 +393,7 @@ void operation_main(const char *matrix_name, bool save)
 
     if (save)
     {
-        std::ofstream ofile("result.mtx");
+        std::ofstream ofile("/tmp/result.mtx");
         ofile << num_row << " " << num_col << " " << r_rows[num_row] << "\n";
 
         for (mattype i = 0; i <= num_row - 1; i++)
@@ -409,20 +424,20 @@ void operation_main(const char *matrix_name, bool save)
     }
     std::cout << "Program completed in " << std::chrono::duration_cast<std::chrono::milliseconds>(end6 - beg).count() << " ms" << std::endl;
 
-    //timer.stop(0);
-    //timer.print_summary();
+    // timer.stop(0);
+    // timer.print_summary();
 }
 
 int main(int argc, char *argv[])
 {
-    //std::ofstream logfile("result.log", std::ios::app);
+    // std::ofstream logfile("result.log", std::ios::app);
     std::cout <<
 #ifdef REORDER
         "Reorder"
 #else
         "Original"
 #endif
-            << " " <<
+              << " " <<
 #ifdef CUDA
         "Cuda"
 #elif defined(PARALLEL)
@@ -430,13 +445,13 @@ int main(int argc, char *argv[])
 #else
         "Sequential"
 #endif
-            << " " <<
+              << " " <<
 #ifdef UPPER
         "Upper"
 #else
         "Lower"
 #endif
-            << std::endl;
+              << std::endl;
 
     if (argc == 2)
     {
