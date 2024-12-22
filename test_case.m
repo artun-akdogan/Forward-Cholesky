@@ -63,14 +63,27 @@ disp("Result nnz")
 display(nnz(mat));
 
 try
-    comp = mmread("/tmp/result.mtx");
+    comp = tril(mmread("/tmp/result.mtx"));
+    disp("Mine nnz")
+    display(nnz(comp));
 
-    fro_norm = norm(comp - mat, 'fro');
+    matdiff = comp - mat;
+    fronorm = normest(matdiff);
+    comp_norm = normest(comp);
+    mat_norm = normest(mat);
+    %disp(matdiff);
+    fro_norm = fronorm/max(comp_norm,mat_norm);
     disp("Frobenius Scalar Product");
     disp(fro_norm);
 catch ME
+    display(ME);
     disp("Couldn't find other matrix");
 end 
+
+
+%subplot(1, 2, 1), spy(mat), title('Program');
+%subplot(1, 2, 2), spy(comp), title('Mine');
+%pause();
 
 return;
 end
