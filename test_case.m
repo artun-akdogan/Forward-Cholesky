@@ -23,7 +23,7 @@
 
 % octave --eval 'test_case("matrices/ct20stif.mtx", 1, false)'
 
-function test_case(matrix, reorder, write)
+function test_case(matrix, reorder, write, calc_norm)
 disp(matrix)
 reordered_mat = mmread(matrix);
 
@@ -53,33 +53,34 @@ disp("Calculate")
 mat = chol(reordered_mat, 'lower');
 toc
 
-if(write)
-    mmwrite("result_mat.mtx", mat, '', 'real', 6);
-end
-
 disp("Begin nnz");
 display(nnz(reordered_mat));
 disp("Result nnz")
 display(nnz(mat));
 
-try
-    comp = tril(mmread("/tmp/result.mtx"));
-    disp("Mine nnz")
-    display(nnz(comp));
+if(calc_norm)
+    try
+        comp = tril(mmread("/tmp/result.mtx"));
+        disp("Mine nnz")
+        display(nnz(comp));
 
-    matdiff = comp - mat;
-    fronorm = normest(matdiff);
-    comp_norm = normest(comp);
-    mat_norm = normest(mat);
-    %disp(matdiff);
-    fro_norm = fronorm/max(comp_norm,mat_norm);
-    disp("Frobenius Scalar Product");
-    disp(fro_norm);
-catch ME
-    display(ME);
-    disp("Couldn't find other matrix");
-end 
+        matdiff = comp - mat;
+        fronorm = normest(matdiff);
+        comp_norm = normest(comp);
+        mat_norm = normest(mat);
+        %disp(matdiff);
+        fro_norm = fronorm/max(comp_norm,mat_norm);
+        disp("Frobenius Scalar Product");
+        disp(fro_norm);
+    catch ME
+        display(ME);
+        disp("Couldn't find other matrix");
+    end
+end
 
+if(write)
+    mmwrite("/tmp/result.mtx", mat, '', 'real', 6);
+end
 
 %subplot(1, 2, 1), spy(mat), title('Program');
 %subplot(1, 2, 2), spy(comp), title('Mine');

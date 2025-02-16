@@ -23,7 +23,7 @@ opt_sequential: opt_sequential.cpp library
 	$(C) $(CFLAGS) -O3 -DBUILD=$(i) -o opt_sequential opt_sequential.cpp SuiteSparse/COLAMD/Lib/libcolamd.a -lm -fopenmp
 
 opt_sequential_upper_cuda.o: opt_sequential_upper_cuda.cu
-	nvcc -c opt_sequential_upper_cuda.cu -o opt_sequential_upper_cuda.o --expt-relaxed-constexpr
+	nvcc -c opt_sequential_upper_cuda.cu -o opt_sequential_upper_cuda.o --expt-relaxed-constexpr --extended-lambda
 
 opt_sequential_cuda: opt_sequential_upper_cuda.o opt_sequential.cpp library
 	$(C) $(CFLAGS) -O3 -DBUILD=$(i) -o opt_sequential.o -c opt_sequential.cpp -lm

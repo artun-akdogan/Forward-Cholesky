@@ -5,6 +5,7 @@
 #include <set>
 #include <algorithm>
 #include <filesystem>
+#include <limits>
 
 #include "opt_sequential_common.h"
 
@@ -106,24 +107,27 @@ void operation_main(const char *matrix_name, bool save)
     std::ifstream file(matrix_name);
     // std::ifstream file("bcsstk03.mtx");
     mattype num_row, num_col;
-    indtype num_lines;
+    indtype init_num_lines, num_lines=0;
 
     // Ignore comments headers
     while (file.peek() == '%')
         file.ignore(2048, '\n');
 
     // Read number of rows and columns
-    file >> num_row >> num_col >> num_lines;
+    file >> num_row >> num_col >> init_num_lines;
 
     std::vector<std::vector<sparse_raw>> matrix(num_row);
     std::vector<std::set<mattype>> rev_graph(num_row);
 
-    for (indtype l = 0; l < num_lines; l++)
+    for (indtype l = 0; l < init_num_lines; l++)
     {
         dattype data;
         mattype row, col;
         file >> row >> col >> data;
-        matrix[row - 1].push_back({data, row - 1, col - 1});
+        if (std::abs(data) >= std::numeric_limits<double>::epsilon()){
+            matrix[row - 1].push_back({data, row - 1, col - 1});
+            num_lines++;
+        }
     }
 
     file.close();
@@ -249,6 +253,7 @@ void operation_main(const char *matrix_name, bool save)
 #else
     auto end11 = std::chrono::high_resolution_clock::now();
 #endif
+    //return;
 
     for (mattype l = 0; l < num_row; l++)
     {
