@@ -124,7 +124,7 @@ void operation_main(const char *matrix_name, bool save)
         dattype data;
         mattype row, col;
         file >> row >> col >> data;
-        if (std::abs(data) >= std::numeric_limits<double>::epsilon()){
+        if (std::abs(data) >= std::numeric_limits<dattype>::epsilon()){
             matrix[row - 1].push_back({data, row - 1, col - 1});
             num_lines++;
         }

@@ -54,7 +54,7 @@ void upper_cholesky_calculate(const mattype num_rows,
         // timer.stop(1);
         //  std::cout << "->ok " << res_diag << std::endl;
         // timer.start(2);
-#pragma omp parallel for firstprivate(r_rows, r_cols, row)  num_threads(8)
+#pragma omp parallel for firstprivate(r_rows, r_cols, row)  num_threads(4)
         for (indtype fi_ind = r_rows[row] + 1; fi_ind < r_rows[row + 1]; fi_ind++)
         {
             indtype tgt_ind = r_rows[r_cols[fi_ind]];
