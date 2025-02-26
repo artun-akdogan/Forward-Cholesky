@@ -5,3 +5,6 @@ SparseChol/
 #SuiteSparse/
 #*.mtx
 *.log
+opt_sequential
+opt_sequential_upper_cuda.o
+opt_sequential.o
