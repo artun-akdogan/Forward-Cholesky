@@ -3,4 +3,5 @@
 Thesis/**
 SparseChol/
 #SuiteSparse/
-*.mtx
+#*.mtx
+*.log
