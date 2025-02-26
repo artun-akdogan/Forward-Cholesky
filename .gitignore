@@ -2,5 +2,5 @@
 .vscode
 Thesis/**
 SparseChol/
-SuiteSparse/
+#SuiteSparse/
 *.mtx
