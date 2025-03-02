@@ -27,9 +27,9 @@ num_to_bool() {
 
 
 TIME_LIMIT=$((90 * 60))
-#MEMORY_LIMIT=$((30 * 1024 * 1024))
+MEMORY_LIMIT=$((10 * 1024 * 1024))
 
-#ulimit -v $MEMORY_LIMIT
+ulimit -v $MEMORY_LIMIT
 
 for i in $(seq 10 11);
 do
@@ -46,7 +46,7 @@ do
         echo "" >> result_my.log;
 
         if [ $EXIT_CODE -eq 0 ]; then
-            timeout $TIME_LIMIT matlab -batch "test_case('$entry', $i, false, $(num_to_bool $EXIT_CODE))"  >> result_mat.log
+            timeout $TIME_LIMIT octave --eval "test_case('$entry', $i, false, $(num_to_bool $EXIT_CODE))"  >> result_oct.log;
             EXIT_CODE=$?
             echo "" >> result_mat.log;
             RESULT=$(check_exit_status $EXIT_CODE "opt_sequential")
