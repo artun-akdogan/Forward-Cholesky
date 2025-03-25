@@ -10,115 +10,6 @@ namespace cg = cooperative_groups;
 #include "opt_sequential_upper_cuda.h"
 
 
-
-struct diagCalculate
-
-{
-    const mattype row;
-    const indtype *d_m_rows;
-    const mattype *d_m_cols;
-    const dattype *d_m_values;
-    const indtype *d_r_rows;
-    const mattype *d_r_cols;
-    dattype *d_r_values;
-
-    __host__ __device__
-    diagCalculate(const mattype row, const indtype *d_m_rows, const mattype *d_m_cols,
-                    const dattype *d_m_values, const indtype *d_r_rows, const mattype *d_r_cols,
-                    dattype *d_r_values) : row(row), d_m_rows(d_m_rows), d_m_cols(d_m_cols), d_m_values(d_m_values),
-                                           d_r_rows(d_r_rows), d_r_cols(d_r_cols), d_r_values(d_r_values) {}
-    __device__ void operator()(const indtype &res_ind)
-    {
-        d_r_values[d_r_rows[row]] = sqrtf(d_m_values[d_m_rows[row]] - d_r_values[d_r_rows[row]]);
-    }
-};
-
-struct columnCalculate
-
-{
-    const mattype row;
-    const indtype *d_m_rows;
-    const mattype *d_m_cols;
-    const dattype *d_m_values;
-    const indtype *d_r_rows;
-    const mattype *d_r_cols;
-    dattype *d_r_values;
-
-    __host__ __device__
-    columnCalculate(const mattype row, const indtype *d_m_rows, const mattype *d_m_cols,
-                    const dattype *d_m_values, const indtype *d_r_rows, const mattype *d_r_cols,
-                    dattype *d_r_values) : row(row), d_m_rows(d_m_rows), d_m_cols(d_m_cols), d_m_values(d_m_values),
-                                           d_r_rows(d_r_rows), d_r_cols(d_r_cols), d_r_values(d_r_values) {}
-    __device__ void operator()(const indtype &res_ind)
-    {
-        /*
-        if (res_ind == d_r_rows[row])
-        {
-            d_r_values[d_r_rows[row]] = sqrtf(d_m_values[d_m_rows[row]] - d_r_values[d_r_rows[row]]);
-        }
-        __syncthreads();
-        if (res_ind == d_r_rows[row]){
-            return;
-        }*/
-        dattype res_diag = d_r_values[d_r_rows[row]];
-        /*dattype res_diag = std::sqrt(d_m_values[d_m_rows[row]] - d_r_values[d_r_rows[row]]);
-
-        if(res_ind==d_r_rows[row]){
-            d_r_values[d_r_rows[row]] = res_diag;
-            return;
-        }*/
-
-        dattype temp_mat = 0;
-        indtype tgt_ind = col_find(d_m_cols, d_r_cols[res_ind], d_m_rows[row] + 1, d_m_rows[row + 1]);
-        if (tgt_ind != COLMAX)
-        {
-            temp_mat = d_m_values[tgt_ind];
-        }
-
-        d_r_values[res_ind] = (temp_mat - d_r_values[res_ind]) / res_diag;
-    }
-};
-
-struct forwardIteration
-{
-
-    const mattype row;
-    const indtype *d_m_rows;
-    const mattype *d_m_cols;
-    const dattype *d_m_values;
-    const indtype *d_r_rows;
-    const mattype *d_r_cols;
-    dattype *d_r_values;
-
-    __host__ __device__
-    forwardIteration(const mattype row, const indtype *d_m_rows, const mattype *d_m_cols,
-                     const dattype *d_m_values, const indtype *d_r_rows, const mattype *d_r_cols,
-                     dattype *d_r_values) : row(row), d_m_rows(d_m_rows), d_m_cols(d_m_cols), d_m_values(d_m_values),
-                                            d_r_rows(d_r_rows), d_r_cols(d_r_cols), d_r_values(d_r_values) {}
-
-    __device__ void operator()(const indtype &iter)
-    {
-        /*
-        indtype max_iter = d_r_rows[row + 1] - d_r_rows[row] - 1;
-        indtype max_iter_const = 4 * max_iter * max_iter + 4 * max_iter + 1;
-        indtype i = (indtype)((max_iter << 1) + 1 - sqrtf(max_iter_const - (iter << 3))) >> 1;
-        indtype j = i + iter - ((i * (2 * max_iter - i + 1)) >> 1);
-        */
-        // std::cout << iter << " " <<i << " " << j << " " << max_iter << std::endl;
-        indtype max_iter = d_r_rows[row + 1] - d_r_rows[row];
-        indtype fi_ind = d_r_rows[row] + iter/max_iter;
-        indtype se_ind = d_r_rows[row] + iter%max_iter;
-        if(fi_ind>se_ind) return;
-        indtype tgt_ind = d_r_rows[d_r_cols[fi_ind]];
-        tgt_ind = col_find(d_r_cols, d_r_cols[se_ind], tgt_ind, d_r_rows[d_r_cols[fi_ind] + 1]);
-        if (tgt_ind == COLMAX)
-        {
-            printf("Error: %d\n", row);
-        }
-        d_r_values[tgt_ind] += d_r_values[fi_ind] * d_r_values[se_ind];
-    }
-};
-
 __global__ void upper_cholesky_calculate_algorithm(
         const mattype num_rows, const indtype *d_m_rows, const mattype *d_m_cols,
         const dattype *d_m_values, const indtype *d_r_rows, const mattype *d_r_cols,
@@ -148,10 +39,19 @@ __global__ void upper_cholesky_calculate_algorithm(
         }
         grid.sync();  // Sync before moving to step 3
 
-        for (int idx = _idx; idx < (max_iter * (max_iter + 1) >> 1); idx += grid.size()) {
+        indtype fwd_max_iter = max_iter * (max_iter + 1) >> 1;
+        //indtype fwd_max_iter = max_iter * max_iter;
+
+        for (int idx = _idx; idx < fwd_max_iter; idx += grid.size()) {
             indtype max_iter_const = 4 * max_iter * max_iter + 4 * max_iter + 1;
             indtype i = (indtype)((max_iter << 1) + 1 - sqrtf(max_iter_const - (idx << 3))) >> 1;
             indtype j = i + idx - ((i * (2 * max_iter - i + 1)) >> 1);
+            /*
+            indtype i = idx/max_iter;
+            indtype j = idx%max_iter;
+            if (i>j)
+                continue;
+            */
             // std::cout << iter << " " <<i << " " << j << " " << max_iter << std::endl;
             indtype fi_ind = d_r_rows[row] + 1 + i;
             indtype se_ind = d_r_rows[row] + 1 + j;
@@ -201,6 +101,7 @@ void upper_cholesky_calculate(mattype num_rows,
         }
     }
     indtype __max_iter = max_row * (max_row - 1) >> 1;
+    //indtype __max_iter = max_row * max_row;
 
     thrust::device_vector<indtype> d_m_rows(m_rows, m_rows + num_rows + 1);
     thrust::device_vector<mattype> d_m_cols(m_cols, m_cols + m_rows[num_rows]);
@@ -229,7 +130,7 @@ void upper_cholesky_calculate(mattype num_rows,
     if (err != cudaSuccess) {
         std::cerr << "CUDA Error: " << cudaGetErrorString(err) << " (" << err << ")" << std::endl;
     }
-    
+
     cudaDeviceSynchronize();
 
     thrust::copy(d_r_values.begin(), d_r_values.end(), r_values);
