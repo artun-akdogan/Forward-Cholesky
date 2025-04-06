@@ -48,11 +48,11 @@ do
         if [ $EXIT_CODE -eq 0 ]; then
             timeout $TIME_LIMIT octave --eval "test_case('$entry', $i, false, $(num_to_bool $EXIT_CODE))"  >> result_oct.log;
             EXIT_CODE=$?
-            echo "" >> result_mat.log;
+            echo "" >> result_oct.log;
             RESULT=$(check_exit_status $EXIT_CODE "opt_sequential")
-            echo "$RESULT" >> result_mat.log;
-            echo "-----------" >> result_mat.log;
-            echo "" >> result_mat.log;
+            echo "$RESULT" >> result_oct.log;
+            echo "-----------" >> result_oct.log;
+            echo "" >> result_oct.log;
         fi
     done
     #make i=$i && ./opt_sequential 
