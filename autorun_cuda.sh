@@ -30,12 +30,20 @@ TIME_LIMIT=$((90 * 60))
 MEMORY_LIMIT=$((10 * 1024 * 1024))
 
 ulimit -v $MEMORY_LIMIT
+#start_after="matrices/s3dkq4m2.mtx"
+#found_start=false
 
 for i in $(seq 10 11);
 do
     search_dir=matrices
     for entry in "$search_dir"/*
     do
+        #if [ "$found_start" = false ]; then
+        #    if [ "$entry" = "$start_after" ]; then
+        #        found_start=true
+        #    fi
+        #    continue
+        #fi
         echo "$entry"
         timeout $TIME_LIMIT make opt_sequential_cuda i=$i && ./opt_sequential $entry >> result_my.log;
         EXIT_CODE=$?
