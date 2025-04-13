@@ -39,19 +39,19 @@ __global__ void upper_cholesky_calculate_algorithm(
         }
         grid.sync();  // Sync before moving to step 3
 
-        indtype fwd_max_iter = max_iter * (max_iter + 1) >> 1;
-        //indtype fwd_max_iter = max_iter * max_iter;
+        //indtype fwd_max_iter = max_iter * (max_iter + 1) >> 1;
+        indtype fwd_max_iter = max_iter * max_iter;
 
         for (int idx = _idx; idx < fwd_max_iter; idx += grid.size()) {
+            /*
             indtype max_iter_const = 4 * max_iter * max_iter + 4 * max_iter + 1;
             indtype i = (indtype)((max_iter << 1) + 1 - sqrtf(max_iter_const - (idx << 3))) >> 1;
             indtype j = i + idx - ((i * (2 * max_iter - i + 1)) >> 1);
-            /*
+            */
             indtype i = idx/max_iter;
             indtype j = idx%max_iter;
             if (i>j)
                 continue;
-            */
             // std::cout << iter << " " <<i << " " << j << " " << max_iter << std::endl;
             indtype fi_ind = d_r_rows[row] + 1 + i;
             indtype se_ind = d_r_rows[row] + 1 + j;
@@ -100,8 +100,8 @@ void upper_cholesky_calculate(mattype num_rows,
             max_row = r_rows[i+1]-r_rows[i];
         }
     }
-    indtype __max_iter = max_row * (max_row - 1) >> 1;
-    //indtype __max_iter = max_row * max_row;
+    //indtype __max_iter = max_row * (max_row - 1) >> 1;
+    indtype __max_iter = max_row * max_row;
 
     thrust::device_vector<indtype> d_m_rows(m_rows, m_rows + num_rows + 1);
     thrust::device_vector<mattype> d_m_cols(m_cols, m_cols + m_rows[num_rows]);
