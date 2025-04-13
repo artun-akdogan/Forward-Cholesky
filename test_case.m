@@ -65,9 +65,15 @@ if(calc_norm)
         display(nnz(comp));
 
         matdiff = comp - mat;
+        disp("Diff Norm");
         fronorm = normest(matdiff);
+        disp(fronorm);
+        disp("My Norm");
         comp_norm = normest(comp);
+        disp(comp_norm);
+        disp("Octave norm");
         mat_norm = normest(mat);
+        disp(mat_norm);
         %disp(matdiff);
         fro_norm = fronorm/max(comp_norm,mat_norm);
         disp("Frobenius Scalar Product");
