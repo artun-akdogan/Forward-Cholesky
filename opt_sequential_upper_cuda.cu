@@ -10,6 +10,30 @@ namespace cg = cooperative_groups;
 #include "opt_sequential_upper_cuda.h"
 
 
+
+__device__ double sqrt_newton(double x)
+{
+    if (x < 0.0)
+        return NAN;
+    if (x == 0.0)
+        return 0.0;
+
+    // Get an approximate 1/sqrt(x) using single-precision rsqrtf
+    float approx = rsqrtf((float)x); // still fast, even if x is double
+    double y = (double)approx;
+
+    // Perform Newton-Raphson iterations to refine
+    // First iteration
+    y = y * (1.5 - 0.5 * x * y * y);
+    // Second iteration (optional, for very high precision)
+    y = y * (1.5 - 0.5 * x * y * y);
+
+    // Now compute sqrt(x)
+    double result = x * y;
+    return result;
+}
+
+
 __global__ void upper_cholesky_calculate_algorithm(
         const mattype num_rows, const indtype *d_m_rows, const mattype *d_m_cols,
         const dattype *d_m_values, const indtype *d_r_rows, const mattype *d_r_cols,
@@ -21,7 +45,7 @@ __global__ void upper_cholesky_calculate_algorithm(
     for (int row = 0; row < num_rows; row++) {
         // Step 1: Process first element only
         if (_idx == 0) {
-            d_r_values[d_r_rows[row]] = sqrtf(d_m_values[d_m_rows[row]] - d_r_values[d_r_rows[row]]);
+            d_r_values[d_r_rows[row]] = sqrt_newton(d_m_values[d_m_rows[row]] - d_r_values[d_r_rows[row]]);
         }
         grid.sync();  // Sync all threads before moving to step 2
 

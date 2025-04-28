@@ -12,7 +12,6 @@ typedef int mattype;
 typedef int indtype;
 typedef double dattype;
 
-
 class Timer
 {
 private:
@@ -22,7 +21,7 @@ private:
     int num_blocks;                                       // Total number of blocks
 
 public:
-    Timer(int num_blocks=5) : num_blocks(num_blocks)
+    Timer(int num_blocks = 5) : num_blocks(num_blocks)
     {
         durations.resize(num_blocks, std::chrono::duration<double>::zero());
         start_times.resize(num_blocks);
@@ -59,13 +58,10 @@ public:
 
 extern Timer timer;
 
-
 #ifdef CUDA
 #define INLINE __device__ inline
 #else
 #define INLINE inline
-
-
 
 #include <vector>
 #include <stack>
@@ -126,7 +122,6 @@ struct sparse_raw
 };
 
 // long long total = 0;
-
 
 INLINE indtype col_find(const mattype *arr, const mattype target, indtype start, indtype end)
 {
