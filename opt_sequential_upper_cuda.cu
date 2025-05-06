@@ -10,7 +10,7 @@ namespace cg = cooperative_groups;
 #include "opt_sequential_upper_cuda.h"
 
 
-
+/*
 __device__ double sqrt_newton(double x)
 {
     if (x < 0.0)
@@ -32,7 +32,7 @@ __device__ double sqrt_newton(double x)
     double result = x * y;
     return result;
 }
-
+*/
 
 __global__ void upper_cholesky_calculate_algorithm(
         const mattype num_rows, const indtype *d_m_rows, const mattype *d_m_cols,
@@ -45,7 +45,7 @@ __global__ void upper_cholesky_calculate_algorithm(
     for (int row = 0; row < num_rows; row++) {
         // Step 1: Process first element only
         if (_idx == 0) {
-            d_r_values[d_r_rows[row]] = sqrt_newton(d_m_values[d_m_rows[row]] - d_r_values[d_r_rows[row]]);
+            d_r_values[d_r_rows[row]] = sqrt(d_m_values[d_m_rows[row]] - d_r_values[d_r_rows[row]]);
         }
         grid.sync();  // Sync all threads before moving to step 2
 
