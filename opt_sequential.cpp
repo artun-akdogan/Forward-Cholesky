@@ -326,7 +326,7 @@ void operation_main(const char *matrix_name, bool save)
 
     std::cout << "Found fills in " << std::chrono::duration_cast<std::chrono::milliseconds>(end3 - end2).count() << " ms" << std::endl;
 
-#ifndef UPPER
+//#ifndef UPPER
     std::cout << "Creating elimination tree (transitive reduction)" << std::endl;
 
     std::vector<std::vector<mattype>> tree(num_row);
@@ -341,14 +341,31 @@ void operation_main(const char *matrix_name, bool save)
     }
     mattype *topologicOrder = new mattype[num_row];
     topologicalSort(tree, topological, topologicOrder);
+
+    mattype *topologicMatrix = new mattype[num_row];
+    mattype *topologicRows = new mattype[topological.size()+1];
+    mattype topologicDepth = topological.size();
+    topologicRows[0] = 0;
+    for (mattype l = 0; l < topological.size(); l++)
+    {
+        mattype j = topological.size() - l -1;
+        for (mattype i = 0; i < topological[j].size(); i++)
+        {
+            topologicMatrix[topologicRows[l] + i] = topological[j][i];
+            // std::cout << l << " " << r_cols[r_rows[l] + i] <<  std::endl;
+        }
+        topologicRows[l + 1] = topologicRows[l] + topological[j].size();
+    }
     tree.clear();
     tree.shrink_to_fit();
+    topological.clear();
+    topological.shrink_to_fit();
 
     auto end31 = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Tree with topological depth " << topological.size() << " for rows " << num_row
+    std::cout << "Tree with topological depth " << topologicDepth << " for rows " << num_row
               << " created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end31 - end3).count() << "ms" << std::endl;
-#endif
+//#endif
 
 #ifdef UPPER
     upper_mat_init(num_row, num_lines, m_rows, m_cols, m_values, matrix);
@@ -373,11 +390,14 @@ void operation_main(const char *matrix_name, bool save)
     std::cout << "Graph created in " << std::chrono::duration_cast<std::chrono::milliseconds>(end41 - end1).count() << " ms" << std::endl;
 
 #ifdef UPPER
-    upper_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values);
+    upper_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values, topologicMatrix, topologicRows, topologicDepth);
 #else
     lower_cholesky_calculate(num_row, m_rows, m_cols, m_values, r_rows, r_cols, r_values, topological, topologicOrder);
-    delete[] topologicOrder;
 #endif
+
+    delete[] topologicMatrix;
+    delete[] topologicRows;
+    delete[] topologicOrder;
 
     // std::cout << "Total iteration: " << total << std::endl;
     // total = 0;

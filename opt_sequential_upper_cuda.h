@@ -9,6 +9,9 @@ void upper_cholesky_calculate(const mattype num_rows,
                               const dattype *m_values,
                               const indtype *r_rows,
                               const mattype *r_cols,
-                              dattype *r_values);
+                              dattype *r_values,
+                              const mattype *topologicMatrix,
+                              const mattype *topologicRows,
+                              const mattype topologicDepth);
 
 #endif
