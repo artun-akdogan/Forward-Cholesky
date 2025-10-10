@@ -29,7 +29,7 @@ reordered_mat = mmread(matrix);
 
 if (bitand(reorder, 1))
     disp("Reorder")
-    fileID = fopen('/tmp/order.mtx', 'r');
+    fileID = fopen('result/order.mtx', 'r');
     
     % Read the newline-separated values into a vector
     vec = fscanf(fileID, '%d').';
@@ -60,7 +60,7 @@ display(nnz(mat));
 
 if(calc_norm)
     try
-        comp = tril(mmread("/tmp/result.mtx"));
+        comp = tril(mmread("result/result.mtx"));
         disp("Mine nnz")
         display(nnz(comp));
 
@@ -85,7 +85,7 @@ if(calc_norm)
 end
 
 if(write)
-    mmwrite("/tmp/result.mtx", mat, '', 'real', 6);
+    mmwrite("result/result.mtx", mat, '', 'real', 6);
 end
 
 %subplot(1, 2, 1), spy(mat), title('Program');

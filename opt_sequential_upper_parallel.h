@@ -40,7 +40,7 @@ void upper_cholesky_calculate(const mattype num_rows,
         }*/
         // std::cout << "->ok " << row << std::endl;
 
-#pragma omp parallel for firstprivate(m_values, m_rows, r_rows, m_cols, r_cols) num_threads(4)
+#pragma omp parallel for firstprivate(m_values, m_rows, r_rows, m_cols, r_cols) //num_threads(4)
         for (mattype row_ind = topologicRows[cur_iter]; row_ind < topologicRows[cur_iter+1]; row_ind++)
         {
             mattype row = topologicMatrix[row_ind];
@@ -67,7 +67,7 @@ void upper_cholesky_calculate(const mattype num_rows,
         for (mattype row_ind = topologicRows[cur_iter]; row_ind < topologicRows[cur_iter+1]; row_ind++)
         {
             mattype row = topologicMatrix[row_ind];
-#pragma omp parallel for firstprivate(r_rows, r_cols, row) num_threads(4)
+#pragma omp parallel for firstprivate(r_rows, r_cols, row) //num_threads(4)
             for (indtype fi_ind = r_rows[row] + 1; fi_ind < r_rows[row + 1]; fi_ind++)
             {
                 indtype tgt_ind = r_rows[r_cols[fi_ind]];

@@ -169,7 +169,7 @@ void operation_main(const char *matrix_name, bool save)
     //#ifndef UPPER
     //#ifndef PARALLEL
     //#ifndef CUDA
-    std::ofstream ofile("/tmp/order.mtx");
+    std::ofstream ofile("result/order.mtx");
 
     for (mattype i = 0; i < num_row; i++)
     {
@@ -418,7 +418,7 @@ void operation_main(const char *matrix_name, bool save)
 
     if (save)
     {
-        std::ofstream ofile("/tmp/result.mtx");
+        std::ofstream ofile("result/result.mtx");
         ofile << "%%MatrixMarket matrix coordinate real symmetric\n";
         ofile << num_row << " " << num_col << " " << r_rows[num_row] << "\n";
 
