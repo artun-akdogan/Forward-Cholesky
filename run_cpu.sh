@@ -62,7 +62,7 @@ do
     echo "-----------" >> result_my.log;
     echo "" >> result_my.log;
     
-    MEM=$( { /usr/bin/time -v timeout "$TIME_LIMIT" octave --eval "test_case('$entry', $i, false, false)" >> result_oct.log; } 2>&1 | \
+    MEM=$( { /usr/bin/time -v timeout "$TIME_LIMIT" LD_LIBRARY_PATH="../opt/suitesparse/lib:../opt/openblas/lib:../opt/octave-6.4.0/lib" ../opt/octave-6.4.0/bin/octave --eval "test_case('$entry', $i, false, false)" >> result_oct.log; } 2>&1 | \
             awk -F: '/Maximum resident set size/ {gsub(/[^0-9]/,"",$2); print $2}' )
     EXIT_CODE=${PIPESTATUS[0]}
     echo "Peak Memory: ${MEM} KB" >> result_oct.log
@@ -71,6 +71,16 @@ do
     echo "$RESULT" >> result_oct.log;
     echo "-----------" >> result_oct.log;
     echo "" >> result_oct.log;
+    
+    MEM=$( { /usr/bin/time -v timeout "$TIME_LIMIT" LD_LIBRARY_PATH="../opt/new/lib:../opt/new/lib64" ../opt/new/bin/octave --eval "test_case('$entry', $i, false, false)" >> result_oct10.log; } 2>&1 | \
+            awk -F: '/Maximum resident set size/ {gsub(/[^0-9]/,"",$2); print $2}' )
+    EXIT_CODE=${PIPESTATUS[0]}
+    echo "Peak Memory: ${MEM} KB" >> result_oct10.log
+    echo "" >> result_oct10.log;
+    RESULT=$(check_exit_status $EXIT_CODE "octave")
+    echo "$RESULT" >> result_oct10.log;
+    echo "-----------" >> result_oct10.log;
+    echo "" >> result_oct10.log;
 done
 #make i=$i && ./opt_sequential 
 
