@@ -16,7 +16,7 @@ echo "NUMBER OF CORES $SLURM_NTASKS"
 export PATH="/arf/home/aakdogan/opt/new/bin:$PATH"
 
 
-TIME_LIMIT=$((180*60))
+TIME_LIMIT=$((180 * 60))
 #source /arf/sw/comp/oneapi/2023.0/setvars.sh
 
 check_exit_status() {

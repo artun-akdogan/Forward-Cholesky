@@ -14,7 +14,7 @@ echo "SLURM_NODELIST $SLURM_NODELIST"
 echo "NUMBER OF CORES $SLURM_NTASKS"
 
 
-TIME_LIMIT=$((90 * 60))
+TIME_LIMIT=$((180 * 60))
 #source /arf/sw/comp/oneapi/2023.0/setvars.sh
 export PATH="/arf/home/aakdogan/opt/new/bin:$PATH"
 
@@ -53,9 +53,15 @@ do
     rm result/result.mtx 2> /dev/null;
     rm result/order.mtx 2> /dev/null;
     echo "$entry"
-    MEM=$( { /usr/bin/time -v timeout "$TIME_LIMIT" make opt_sequential_cuda i="$i" && ./opt_sequential "$entry" >> result_gpu.log 2>&1; } 2>&1 | \
-            awk -F: '/Maximum resident set size/ {gsub(/[^0-9]/,"",$2); print $2}' )
-    EXIT_CODE=${PIPESTATUS[0]}
+    read -r MEM EXIT_CODE <<< "$(
+    {
+        /usr/bin/time -v timeout "$TIME_LIMIT" make opt_sequential_cuda i="$i" && ./opt_sequential "$entry" >> result_gpu.log 2>&1
+        echo "__EXIT_CODE__:$?"
+    } 2>&1 | awk -F: '
+        /Maximum resident set size/ {gsub(/[^0-9]/,"",$2); mem=$2}
+        /__EXIT_CODE__/ {code=$2}
+        END {print mem, code}'
+    )"
     echo "Peak Memory: ${MEM} KB" >> result_gpu.log
     echo "" >> result_gpu.log;
     RESULT=$(check_exit_status $EXIT_CODE "opt_sequential")
