@@ -56,7 +56,7 @@ do
     echo "$entry";
     read -r MEM EXIT_CODE <<< "$(
     {
-        /usr/bin/time -v timeout "$TIME_LIMIT" make i="$i" && ./opt_sequential "$entry" >> result_my.log 2>&1
+        /usr/bin/time -v bash -c "timeout $TIME_LIMIT make i=$i && ./opt_sequential $entry" >> result_my.log 2>&1
         echo "__EXIT_CODE__:$?"
     } 2>&1 | awk -F: '
         /Maximum resident set size/ {gsub(/[^0-9]/,"",$2); mem=$2}
