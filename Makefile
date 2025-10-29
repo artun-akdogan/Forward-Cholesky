@@ -30,6 +30,10 @@ opt_sequential_cuda: opt_sequential_upper_cuda.o opt_sequential.cpp library
 	$(C) $(CFLAGS) -O3 -DBUILD=$(i) -o opt_sequential.o -c opt_sequential.cpp -lm
 	$(C) -O3 opt_sequential_upper_cuda.o opt_sequential.o  SuiteSparse/COLAMD/build/libcolamd.a  SuiteSparse/SuiteSparse_config/build/libsuitesparseconfig.a -o opt_sequential -L/usr/local/cuda/lib64 -lcudart -fopenmp
 
+opt_sequential_cuda_truba: opt_sequential_upper_cuda.o opt_sequential.cpp library
+	$(C) $(CFLAGS) -O3 -DBUILD=$(i) -o opt_sequential.o -c opt_sequential.cpp -lm
+	$(C) -O3 opt_sequential_upper_cuda.o opt_sequential.o  SuiteSparse/COLAMD/build/libcolamd.a  SuiteSparse/SuiteSparse_config/build/libsuitesparseconfig.a -o opt_sequential -L/arf/sw/lib/cuda/12.4/lib64 -lcudart -fopenmp
+
 
 #------------------------------------------------------------------------------
 # Remove all but the files in the original distribution

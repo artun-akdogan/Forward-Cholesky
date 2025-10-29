@@ -4,13 +4,16 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -c 1
+#SBATCH --gres=gpu:1
 #SBATCH --threads=1
 #SBATCH --time=1-00:00:00
+#SBATCH -o print_gpu.out    # Ciktinin yazilacagi dosya adi
 
 
 echo "SLURM_NODELIST $SLURM_NODELIST"
 echo "NUMBER OF CORES $SLURM_NTASKS"
 
+module load lib/cuda/12.4
 
 TIME_LIMIT=$((180 * 60))
 #source /arf/sw/comp/oneapi/2023.0/setvars.sh
@@ -53,7 +56,7 @@ do
     echo "$entry"
     read -r MEM EXIT_CODE <<< "$(
     {
-        __time -v bash -c "timeout $TIME_LIMIT make opt_sequential_cuda i=$i && ./opt_sequential $entry >> result_gpu.log" 2>&1
+        __time -v bash -c "timeout $TIME_LIMIT make opt_sequential_cuda_truba i=$i && ./opt_sequential $entry >> result_gpu.log" 2>&1
         echo "__EXIT_CODE__:$?"
     } 2>&1 | awk -F: '
         /Maximum resident set size/ {gsub(/[^0-9]/,"",$2); mem=$2}
