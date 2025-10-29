@@ -3,7 +3,7 @@
 #SBATCH -J qe_test
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -c 1
+#SBATCH --cpus-per-task 10
 #SBATCH --gres=gpu:1
 #SBATCH --threads=1
 #SBATCH --time=1-00:00:00
