@@ -64,20 +64,30 @@ if(calc_norm)
         disp("Mine nnz")
         display(nnz(comp));
 
-        matdiff = comp - mat;
-        disp("Diff Norm");
-        fronorm = normest(matdiff);
-        disp(fronorm);
-        disp("My Norm");
-        comp_norm = normest(comp);
-        disp(comp_norm);
-        disp("Octave norm");
-        mat_norm = normest(mat);
-        disp(mat_norm);
-        %disp(matdiff);
-        fro_norm = fronorm/max(comp_norm,mat_norm);
-        disp("Frobenius Scalar Product");
-        disp(fro_norm);
+
+        disp("Original norm");
+        den_norm = norm(reordered_mat, 'fro');
+        disp(den_norm);
+
+        A_comp = comp * comp';
+        disp("Forward Diff Norm");
+        
+        num_norm = norm(A_comp - reordered_mat, 'fro');
+        disp(num_norm);
+
+        rec_error = num_norm / den_norm;
+        disp("Forward Relative Reconstruction Error:");
+        disp(rec_error);
+
+        A_mat = mat * mat';
+        disp("Octave Diff Norm");
+        
+        num_norm = norm(A_mat - reordered_mat, 'fro');
+        disp(num_norm);
+
+        rec_error = num_norm / den_norm;
+        disp("Octave Relative Reconstruction Error:");
+        disp(rec_error);
     catch ME
         display(ME);
         disp("Couldn't find other matrix");
