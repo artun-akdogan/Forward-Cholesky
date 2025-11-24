@@ -60,9 +60,7 @@ display(nnz(mat));
 
 if(calc_norm)
     try
-        tic
         comp = tril(fast_mtx_read("result/result.mtx"));
-        toc
         disp("Mine nnz")
         display(nnz(comp));
 
@@ -79,16 +77,6 @@ if(calc_norm)
 
         rec_error = num_norm / den_norm;
         disp("Forward Relative Reconstruction Error:");
-        disp(rec_error);
-
-        A_mat = mat * mat';
-        disp("Octave Diff Norm");
-        
-        num_norm = norm(A_mat - reordered_mat, 'fro');
-        disp(num_norm);
-
-        rec_error = num_norm / den_norm;
-        disp("Octave Relative Reconstruction Error:");
         disp(rec_error);
     catch ME
         display(ME);
