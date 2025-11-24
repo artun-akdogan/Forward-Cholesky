@@ -5,7 +5,7 @@
 #SBATCH -n 1
 #SBATCH -c 4
 #SBATCH --threads=1
-#SBATCH --time=1-00:00:00
+#SBATCH --time=3-00:00:00
 
 
 echo "SLURM_NODELIST $SLURM_NODELIST"

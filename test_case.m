@@ -25,7 +25,7 @@
 
 function test_case(matrix, reorder, write, calc_norm)
 disp(matrix)
-reordered_mat = mmread(matrix);
+reordered_mat = fast_mtx_read(matrix);
 
 if (bitand(reorder, 1))
     disp("Reorder")
@@ -60,7 +60,9 @@ display(nnz(mat));
 
 if(calc_norm)
     try
-        comp = tril(mmread("result/result.mtx"));
+        tic
+        comp = tril(fast_mtx_read("result/result.mtx"));
+        toc
         disp("Mine nnz")
         display(nnz(comp));
 
