@@ -50,13 +50,13 @@ end
 
 tic
 disp("Calculate")
-mat = chol(reordered_mat, 'lower');
+%mat = chol(reordered_mat, 'lower');
 toc
 
 disp("Begin nnz");
 display(nnz(reordered_mat));
 disp("Result nnz")
-display(nnz(mat));
+%display(nnz(mat));
 
 if(calc_norm)
     try
@@ -85,7 +85,7 @@ if(calc_norm)
 end
 
 if(write)
-    mmwrite("result/result.mtx", mat, '', 'real', 6);
+    %mmwrite("result/result.mtx", mat, '', 'real', 6);
 end
 
 %subplot(1, 2, 1), spy(mat), title('Program');
