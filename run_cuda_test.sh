@@ -13,7 +13,6 @@
 echo "SLURM_NODELIST $SLURM_NODELIST"
 echo "NUMBER OF CORES $SLURM_NTASKS"
 
-module load lib/cuda/12.4
 
 TIME_LIMIT=$((180 * 60))
 #source /arf/sw/comp/oneapi/2023.0/setvars.sh
@@ -53,6 +52,8 @@ for entry in "$search_dir"/*
 do
     rm result/result.mtx 2> /dev/null;
     rm result/order.mtx 2> /dev/null;
+
+    module load lib/cuda/12.4
     echo "$entry"
     read -r MEM EXIT_CODE <<< "$(
     {

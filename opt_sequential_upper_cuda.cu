@@ -134,13 +134,14 @@ void upper_cholesky_calculate(mattype num_rows,
                               const mattype *topologicRows,
                               mattype topologicDepth)
 {
-    /*
+
     int supportsCoopLaunch = 0;
     cudaDeviceGetAttribute(&supportsCoopLaunch, cudaDevAttrCooperativeLaunch, 0);
     if (!supportsCoopLaunch) {
-        std::cerr << "Error: Your GPU does not support cooperative kernels!" << std::endl;
+        std::cout << "Error: Your GPU does not support cooperative kernels!" << std::endl;
         return;
     }
+        /*
     int maxBlocks;
     cudaDeviceGetAttribute(&maxBlocks, cudaDevAttrMaxBlocksPerMultiprocessor, 0);
     std::cout << "Max blocks per SM: " << maxBlocks << std::endl;
@@ -194,7 +195,7 @@ void upper_cholesky_calculate(mattype num_rows,
     cudaError_t err = cudaLaunchCooperativeKernel((void *)upper_cholesky_calculate_algorithm, dim3(blocks), dim3(threads), kernelArgs);
     if (err != cudaSuccess)
     {
-        std::cerr << "CUDA Error: " << cudaGetErrorString(err) << " (" << err << ")" << std::endl;
+        std::cout << "CUDA Error: " << cudaGetErrorString(err) << " (" << err << ")" << std::endl;
     }
 
     cudaDeviceSynchronize();
