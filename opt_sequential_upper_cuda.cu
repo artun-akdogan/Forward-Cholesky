@@ -137,22 +137,35 @@ void upper_cholesky_calculate(mattype num_rows,
 
     int supportsCoopLaunch = 0;
     cudaDeviceGetAttribute(&supportsCoopLaunch, cudaDevAttrCooperativeLaunch, 0);
-    if (!supportsCoopLaunch) {
+    if (!supportsCoopLaunch)
+    {
         std::cout << "Error: Your GPU does not support cooperative kernels!" << std::endl;
-        return;
+        abort();
     }
-        /*
-    int maxBlocks;
-    cudaDeviceGetAttribute(&maxBlocks, cudaDevAttrMaxBlocksPerMultiprocessor, 0);
-    std::cout << "Max blocks per SM: " << maxBlocks << std::endl;
-    int maxThreadsPerSM, numSMs, maxThreads;
-    cudaDeviceGetAttribute(&maxThreadsPerSM, cudaDevAttrMaxThreadsPerMultiProcessor, 0);
-    cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, 0);
+    /*
+int maxBlocks;
+cudaDeviceGetAttribute(&maxBlocks, cudaDevAttrMaxBlocksPerMultiprocessor, 0);
+std::cout << "Max blocks per SM: " << maxBlocks << std::endl;
+int maxThreadsPerSM, numSMs, maxThreads;
+cudaDeviceGetAttribute(&maxThreadsPerSM, cudaDevAttrMaxThreadsPerMultiProcessor, 0);
+cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, 0);
 */
     int maxThreadsPerBlock, maxThreadsPerSM, numSMs;
     cudaDeviceGetAttribute(&maxThreadsPerBlock, cudaDevAttrMaxThreadsPerBlock, 0);
     cudaDeviceGetAttribute(&maxThreadsPerSM, cudaDevAttrMaxThreadsPerMultiProcessor, 0);
     cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, 0);
+
+    size_t free_mem, total_mem;
+    cudaMemGetInfo(&free_mem, &total_mem);
+
+    size_t required = sizeof(indtype) * (num_rows + 1) * 2 +
+                      sizeof(mattype) * (m_rows[num_rows] + r_rows[num_rows] + topologicRows[topologicDepth] + topologicDepth + 1) +
+                      sizeof(dattype) * (m_rows[num_rows], r_rows[num_rows]);
+    if (required >= free_mem)
+    {
+        std::cout << "Not enough GPU memory" << std::endl;
+        abort();
+    }
 
     indtype max_row = 0;
     for (int i = 0; i < num_rows; i++)
@@ -196,9 +209,19 @@ void upper_cholesky_calculate(mattype num_rows,
     if (err != cudaSuccess)
     {
         std::cout << "CUDA Error: " << cudaGetErrorString(err) << " (" << err << ")" << std::endl;
+        abort();
     }
 
     cudaDeviceSynchronize();
+
+    cudaError_t last = cudaGetLastError();
+    if (last != cudaSuccess)
+    {
+        std::cout << "Runtime kernel error: "
+                  << cudaGetErrorString(last)
+                  << std::endl;
+        abort();
+    }
 
     thrust::copy(d_r_values.begin(), d_r_values.end(), r_values);
 }
