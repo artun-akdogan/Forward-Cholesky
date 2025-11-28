@@ -160,7 +160,7 @@ cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, 0);
 
     size_t required = sizeof(indtype) * (num_rows + 1) * 2 +
                       sizeof(mattype) * (m_rows[num_rows] + r_rows[num_rows] + topologicRows[topologicDepth] + topologicDepth + 1) +
-                      sizeof(dattype) * (m_rows[num_rows], r_rows[num_rows]);
+                      sizeof(dattype) * (m_rows[num_rows] + r_rows[num_rows]);
     if (required >= free_mem)
     {
         std::cout << "Not enough GPU memory" << std::endl;
@@ -198,12 +198,16 @@ cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, 0);
 
     void *kernelArgs[] = {&num_rows, &raw_d_m_rows, &raw_d_m_cols, &raw_d_m_values, &raw_d_r_rows, &raw_d_r_cols, &raw_d_r_values, &raw_d_topologicMatrix, &raw_d_topologicRows, &topologicDepth};
 
-    int threads = maxThreadsPerBlock;
+    int threads = 256; //maxThreadsPerBlock;
 
     // Compute optimal number of blocks
-    int maxTotalThreads = maxThreadsPerSM * numSMs;
-    std::cout << "Running with " << maxTotalThreads << " threads" << std::endl;
-    int blocks = min((__max_iter + threads - 1) / threads, maxTotalThreads / threads);
+    //int maxTotalThreads = maxThreadsPerSM * numSMs;
+    //std::cout << "Running with " << maxTotalThreads << " threads" << std::endl;
+    //int blocks = min((__max_iter + threads - 1) / threads, maxTotalThreads / threads);
+
+    int maxCoopBlocksPerSM = 0;
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxCoopBlocksPerSM, upper_cholesky_calculate_algorithm, threads, 0);
+    int blocks = min((__max_iter + threads - 1) / threads, maxCoopBlocksPerSM * numSMs);
 
     cudaError_t err = cudaLaunchCooperativeKernel((void *)upper_cholesky_calculate_algorithm, dim3(blocks), dim3(threads), kernelArgs);
     if (err != cudaSuccess)

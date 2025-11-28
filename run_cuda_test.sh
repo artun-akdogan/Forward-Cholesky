@@ -53,7 +53,8 @@ do
     rm result/result.mtx 2> /dev/null;
     rm result/order.mtx 2> /dev/null;
 
-    module load lib/cuda/12.4
+    module purge;
+    module load lib/cuda/12.4;
     echo "$entry"
     read -r MEM EXIT_CODE <<< "$(
     {
