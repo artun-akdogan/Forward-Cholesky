@@ -3,6 +3,8 @@ This repository hosts the source code of the Forward method for symmetric positi
 
 
 ### Quick Run
+Clone the repository via:
+* git clone --recurse-submodules https://github.com/artun-akdogan/Forward-Cholesky.git
 Please ensure your PC has openBLAS, openMP and CUDA (if GPU version will be run) installed.
 * sudo apt install libopenblas-dev libomp-dev
 
