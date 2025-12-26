@@ -1,3 +1,5 @@
+/* Previous experiment, unused! */
+
 #ifndef OPT_SEQUENTIAL_LOWER
 #define OPT_SEQUENTIAL_LOWER
 

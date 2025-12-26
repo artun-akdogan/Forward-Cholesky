@@ -1,3 +1,5 @@
+/* Previous experiment, unused! */
+
 #ifndef OPT_SEQUENTIAL_LOWER_COMMON
 #define OPT_SEQUENTIAL_LOWER_COMMON
 

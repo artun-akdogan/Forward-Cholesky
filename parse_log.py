@@ -1,14 +1,11 @@
 import csv
 import re
 
-# Define input and output file paths
 input_file_mat = "result_mat.log"
 input_file_oct = "result_oct.log"
 input_file_my = "result_my.log"
 output_file = "output.csv"
 
-
-# Storage for extracted data
 
 """{
     "filename": None,
