@@ -16,6 +16,11 @@
 #include "opt_sequential_common.h"
 #include "opt_sequential_lower_common.h"
 
+
+#if BUILD & 1
+#define REORDER
+#endif
+
 #define CUDA_CHECK(x)       \
     if ((x) != cudaSuccess) \
         throw std::runtime_error(std::string("CUDA error ") + std::to_string(x));
@@ -259,7 +264,55 @@ void operation_main(const char *matrix_name, bool save)
     mattype *m_cols, *r_cols;
     dattype *m_values, *r_values;
 
+#ifdef REORDER
+    int perm[num_row + 5];   /* note the size is N+1 */
+    
+    std::ifstream ifile("result/order.mtx");
+    for (mattype i = 0; i < num_row; i++)
+    {
+        ifile >> perm[i];
+        perm[i]--;
+    }
+    ifile.close();
+
+    int *iperm = new int[num_row];
+    for (int i = 0; i < num_row; i++)
+    {
+        iperm[perm[i]] = i;
+    }
+
+    std::vector<std::vector<sparse_raw>> reordered_matrix(num_row);
+    for (mattype l = 0; l < num_row; l++)
+    {
+        for (mattype i = 0; i < matrix[l].size(); i++)
+        { /*
+             if(matrix[l][i].data<0.00000001 && matrix[l][i].data>-0.00000001){
+                 std::cout << matrix[l][i].data;
+                 exit(-1);
+             }*/
+            if (iperm[matrix[l][i].column] > iperm[matrix[l][i].row])
+            {
+                // std::cout << "Here: " <<iperm[matrix[l][i].row] << " " << iperm[matrix[l][i].column] << std::endl;
+                reordered_matrix[iperm[matrix[l][i].column]].push_back({matrix[l][i].data, iperm[matrix[l][i].column], iperm[matrix[l][i].row]});
+            }
+            else
+            {
+                reordered_matrix[iperm[matrix[l][i].row]].push_back({matrix[l][i].data, iperm[matrix[l][i].row], iperm[matrix[l][i].column]});
+            }
+        }
+    }
+
+    for (mattype l = 0; l < num_row; l++)
+    {
+        std::sort(reordered_matrix[l].begin(), reordered_matrix[l].end(), [](const sparse_raw &lhs, const sparse_raw &rhs)
+                  { return lhs.column < rhs.column; });
+    }
+    matrix = reordered_matrix;
     auto end11 = std::chrono::high_resolution_clock::now();
+    std::cout << "Reorder in " << std::chrono::duration_cast<std::chrono::milliseconds>(end11 - end1).count() << " ms" << std::endl;
+#else
+    auto end11 = std::chrono::high_resolution_clock::now();
+#endif
     //return;
 
     for (mattype l = 0; l < num_row; l++)
