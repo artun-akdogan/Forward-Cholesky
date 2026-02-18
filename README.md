@@ -27,3 +27,6 @@ For unordered:
 To obtain the relative reconstruction residude, please run the following (Second argument should be the number you run the build with):
 * octave --eval "test_case('matrices/bcsstk03.mtx', 7, false, true)"
 
+
+Also, for cusparse test, you can use the followng sort command for testing purposes:
+* (head -n 2 result/result.mtx && tail -n +3 result/result.mtx | sort -k2,2n -k1,1n) > sorted.mtx

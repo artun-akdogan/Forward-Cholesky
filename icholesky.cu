@@ -87,9 +87,7 @@ void compute_numeric_L(
                           cudaMemcpyHostToDevice));
     //std::cout << "ok4" << std::endl;
 
-    // ---------------------------------------
-    // Step 4: cuSPARSE setup
-    // ---------------------------------------
+    // --------- cuSPARSE setup ---------
     cusparseHandle_t handle;
     CUSPARSE_CHECK(cusparseCreate(&handle));
     //std::cout << "ok" << std::endl;
