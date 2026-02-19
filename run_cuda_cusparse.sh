@@ -47,6 +47,7 @@ num_to_bool() {
 }
 
 i=11
+cd /arf/home/aakdogan/CMPE-Cholesky-Thesis
 
 search_dir=matrices
 for entry in "$search_dir"/*
