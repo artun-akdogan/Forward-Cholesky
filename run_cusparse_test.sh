@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -p barbun-cuda
+#SBATCH -p akya-cuda
 #SBATCH -J qe_test
 #SBATCH -N 1
 #SBATCH -n 1
